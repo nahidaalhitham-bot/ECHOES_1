@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECHOES — الذاكرة الشخصية</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  .board-wrap { overflow:auto; max-height:72vh; border-radius:16px; border:10px solid #6b4423;
+    box-shadow: inset 0 0 30px rgba(0,0,0,.35), 0 6px 18px rgba(0,0,0,.18); background:#b8875a; direction:ltr; }
+  .board { position:relative; transform-origin: 0 0;
+    background-color:#c49a6c;
+    background-image:
+      radial-gradient(rgba(90,55,25,.35) 1px, transparent 1.5px),
+      radial-gradient(rgba(255,240,210,.25) 1px, transparent 1.5px),
+      radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.12), transparent 60%);
+    background-size: 7px 7px, 11px 11px, 100% 100%; background-position: 0 0, 3px 5px, 0 0; }
+  .strings { position:absolute; inset:0; pointer-events:none; overflow:visible; }
+  .str path { fill:none; stroke-width:2.6; stroke-linecap:round; filter: drop-shadow(1px 2px 1px rgba(0,0,0,.35)); }
+  .str.s-evidence path, .str.s-manual path { stroke:#c0392b; }
+  .str.s-manual path { stroke:#8e1b10; }
+  .str.s-ai path { stroke:#e3a008; stroke-dasharray:8 6; }
+  .str.s-web path { stroke:#2563eb; }
+  .str.s-conversation path { stroke:#15803d; stroke-dasharray:2 5; }
+  .str.dim { opacity:.12; } .str.hot path { stroke-width:4.5; }
+  .str text { font: 700 14px sans-serif; fill:#fff; paint-order:stroke; stroke:#3a1a0a; stroke-width:4px; direction:rtl; }
+  .bcard { position:absolute; transform: translate(-50%,-50%) rotate(var(--rot)); width:132px; padding:8px 8px 10px;
+    background:#fffef8; box-shadow: 2px 5px 10px rgba(0,0,0,.35); text-align:center; cursor:grab; user-select:none;
+    direction:rtl; transition: box-shadow .15s; touch-action:none; }
+  .bcard:active { cursor:grabbing; }
+  .bcard.sel { box-shadow: 0 0 0 4px #ffd84d, 2px 8px 18px rgba(0,0,0,.45); z-index:5; }
+  .bcard .pin { position:absolute; top:-8px; left:50%; width:16px; height:16px; margin-left:-8px; border-radius:50%;
+    background: radial-gradient(circle at 35% 35%, #ff8a80, #c62828 60%, #7f0000); box-shadow:1px 3px 3px rgba(0,0,0,.5); }
+  .bcard .ph { height:62px; display:grid; place-items:center; font-size:34px; background:#2d2a32; color:#fff; margin-bottom:6px; }
+  .k-person .ph { background:linear-gradient(135deg,#5b2a86,#7628b8); }
+  .k-place .ph { background:linear-gradient(135deg,#1f5f4a,#2f8f6f); }
+  .k-event .ph { background:linear-gradient(135deg,#8a4b12,#c46a1a); }
+  .k-object .ph { background:linear-gradient(135deg,#3b4a6b,#5871a3); }
+  .bcard .lab { font-weight:800; font-size:13.5px; color:#2b1b0e; line-height:1.3; font-family: "Segoe Print", "Comic Sans MS", inherit; }
+  .bcard .kd { font-size:11px; color:#7a6a58; margin-top:3px; }
+  .bcard.center { width:170px; border:3px solid #c0392b; }
+  .bcard.center .ph { height:84px; font-size:46px; }
+  .bcard.note { background:#fff6a8; width:140px; }
+  .bcard.convo { background:#e7f7e2; width:140px; border-top:6px solid #15803d; }
+  .bcard.clip { background:#f4f1e8; width:150px; font-family: Georgia, serif; border:1px solid #d6cfbd;
+    clip-path: polygon(0 3%, 6% 0, 14% 4%, 25% 0, 38% 3%, 52% 0, 66% 4%, 80% 0, 92% 3%, 100% 0, 100% 97%, 90% 100%, 75% 96%, 60% 100%, 45% 96%, 30% 100%, 15% 96%, 0 100%); }
+  .bcard.clip .lab { color:#1d3a6e; }
+  .legend { display:flex; flex-wrap:wrap; gap:14px; margin:8px 0 10px; color:var(--muted); }
+  .legend i.lg { display:inline-block; width:26px; height:0; border-top:3px solid; vertical-align:middle; }
+  .lg.s-evidence { border-color:#c0392b; } .lg.s-manual { border-color:#8e1b10; }
+  .lg.s-ai { border-color:#e3a008; border-top-style:dashed !important; }
+  .lg.s-web { border-color:#2563eb; } .lg.s-conversation { border-color:#15803d; border-top-style:dotted !important; }
+  .evid { list-style:none; padding:0; margin:8px 0 0; } .evid li { padding:8px 0; border-bottom:1px dashed var(--line); position:relative; }
+  .srcb { font-size:11px; padding:2px 8px; border-radius:10px; margin-inline-end:6px; color:#fff; }
+  .srcb.s-evidence { background:#c0392b; } .srcb.s-manual { background:#8e1b10; } .srcb.s-ai { background:#e3a008; }
+  .srcb.s-web { background:#2563eb; } .srcb.s-conversation { background:#15803d; }
+</style>
+</head>
+<body>
+  <div class="demo-badge" id="demo-badge" hidden>وضع العرض التجريبي — البيانات وهمية</div>
+  <div id="app"></div>
+<script src="/static/shell.js"></script>
+<script>
+requireAuth().then(async () => {
+document.getElementById('app').innerHTML = shell("network", "الذاكرة الشخصية", "ذكريات بأسماء وأماكن، مع صور وأصوات غير محدودة");
+const page = document.getElementById('page');
+
+const KIND_AR = {person:'شخص', place:'مكان', event:'حدث', object:'شيء', fact:'معلومة', routine:'روتين', web:'من الإنترنت'};
+const KIND_ICON = {person:'👤', place:'📍', event:'📅', object:'🧸', fact:'📝', routine:'🔁', web:'🌐'};
+const SRC_AR = {evidence:'دليل من الملف', ai:'اقتراح الذكاء الاصطناعي', web:'من الإنترنت', conversation:'من محادثة', manual:'يدوي'};
+const SECTION_CARDS = new Set(['ملف المريض','الروتين اليومي','الذكريات المهمة','معلومات مهمة','التفضيلات الشخصية','ذكريات الطفولة','أحداث الحياة','الهوايات','الأماكن المفضلة']);
+const BW = 1500, BH = 980;
+let boardState = { zoom: 0.85, show: {evidence:true, ai:true, web:true, conversation:true, manual:true}, sections:false, selected:null };
+function savedPos() { try { return JSON.parse(localStorage.getItem('echoes_board_pos') || '{}'); } catch (e) { return {}; } }
+function savePos(p) { try { localStorage.setItem('echoes_board_pos', JSON.stringify(p)); } catch (e) {} }
+
+async function renderGraph() {
+  const box = document.getElementById('graph');
+  const d = await jget('/api/network/graph?limit=1000');
+  const allNodes = d.nodes || [], es = d.edges || [];
+  const opts = '<option value="">اختيار عنصر حسب النوع والاسم</option>' + allNodes.filter(n => n.kind !== 'web')
+    .map(n => `<option value="${n.id}">${esc(KIND_AR[n.kind] || n.kind)} — ${esc(n.label)}</option>`).join('');
+  document.getElementById('srcNode').innerHTML = opts; document.getElementById('dstNode').innerHTML = opts;
+  wireForms();
+  if (!allNodes.length) { box.innerHTML = '<p class="muted" style="padding:20px">أضيفي معلومات في ملف المريض ثم اضغطي «ابدأ التحقيق».</p>'; return; }
+
+  const ns = allNodes.filter(n => boardState.sections || !(n.kind === 'fact' && SECTION_CARDS.has(n.label)));
+  const visible = new Set(ns.map(n => n.id));
+  const edges = es.filter(e => visible.has(e.src_id) && visible.has(e.dst_id) && boardState.show[e.source || 'manual'] !== false);
+  const deg = {}; edges.forEach(e => { deg[e.src_id] = (deg[e.src_id] || 0) + 1; deg[e.dst_id] = (deg[e.dst_id] || 0) + 1; });
+
+  // ---- layout: the patient in the middle, each kind in its own sector ----
+  const saved = savedPos(), pos = {};
+  const center = ns.find(n => n.kind === 'person' && n.detail === 'صاحب الذكريات') || ns.slice().sort((a, b) => (deg[b.id] || 0) - (deg[a.id] || 0))[0];
+  const sector = { person: -90, place: 0, event: 90, object: 180, fact: -150, routine: 140 };
+  const groups = {};
+  ns.forEach(n => { if (n === center || n.kind === 'web') return; (groups[n.kind] = groups[n.kind] || []).push(n); });
+  const cx = BW / 2, cy = BH / 2;
+  pos[center.id] = saved[center.id] || { x: cx, y: cy };
+  Object.entries(groups).forEach(([kind, list]) => {
+    const base = (sector[kind] ?? 45) * Math.PI / 180, spread = Math.min(Math.PI * 0.55, 0.22 * list.length + 0.2);
+    list.forEach((n, i) => {
+      if (saved[n.id]) { pos[n.id] = saved[n.id]; return; }
+      const t = list.length === 1 ? 0 : (i / (list.length - 1) - 0.5);
+      const a = base + t * spread * 2, r = 250 + (i % 2) * 120;
+      pos[n.id] = { x: cx + r * Math.cos(a) * 1.35, y: cy + r * Math.sin(a) };
+    });
+  });
+  ns.filter(n => n.kind === 'web').forEach((n, i) => {
+    if (saved[n.id]) { pos[n.id] = saved[n.id]; return; }
+    const e = es.find(e => e.dst_id === n.id || e.src_id === n.id);
+    const parent = e && pos[e.src_id === n.id ? e.dst_id : e.src_id];
+    const p = parent || { x: cx, y: cy };
+    const dx = p.x - cx, dy = p.y - cy, L = Math.hypot(dx, dy) || 1;
+    pos[n.id] = { x: p.x + dx / L * 170, y: p.y + dy / L * 120 + 30 };
+  });
+  // push overlapping cards apart (only cards the family has not placed by hand)
+  for (let it = 0; it < 80; it++) {
+    let moved = false;
+    for (let i = 0; i < ns.length; i++) for (let j = i + 1; j < ns.length; j++) {
+      const a = pos[ns[i].id], b = pos[ns[j].id];
+      const dx = b.x - a.x, dy = b.y - a.y, ox = 165 - Math.abs(dx), oy = 160 - Math.abs(dy);
+      if (ox > 0 && oy > 0) {
+        moved = true;
+        const fa = saved[ns[i].id] || ns[i].id === center.id ? 0 : 0.5, fb = saved[ns[j].id] || ns[j].id === center.id ? 0 : 0.5;
+        if (ox < oy) { const sx = Math.sign(dx || 1) * ox; a.x -= sx * fa; b.x += sx * fb; }
+        else { const sy = Math.sign(dy || 1) * oy; a.y -= sy * fa; b.y += sy * fb; }
+      }
+    }
+    ns.forEach(n => { const p = pos[n.id]; p.x = Math.max(90, Math.min(BW - 90, p.x)); p.y = Math.max(80, Math.min(BH - 80, p.y)); });
+    if (!moved) break;
+  }
+
+  const cards = ns.map(n => {
+    const rot = ((n.id * 37) % 9) - 4;
+    const cls = n.kind === 'web' ? 'clip' : (n.kind === 'event' && /^محادثة /.test(n.label)) ? 'convo' : n.kind === 'fact' ? 'note' : 'polaroid';
+    const main = n.id === center.id ? ' center' : '';
+    return `<div class="bcard ${cls} k-${n.kind}${main}" data-id="${n.id}" style="left:${pos[n.id].x}px;top:${pos[n.id].y}px;--rot:${rot}deg" tabindex="0">
+      <span class="pin"></span>
+      ${cls === 'polaroid' ? `<div class="ph">${KIND_ICON[n.kind] || '•'}</div>` : ''}
+      <div class="lab">${esc(n.label.length > 34 ? n.label.slice(0, 33) + '…' : n.label)}</div>
+      <div class="kd">${esc(KIND_AR[n.kind] || n.kind)}${deg[n.id] ? ' · ' + deg[n.id] : ''}</div>
+    </div>`;
+  }).join('');
+
+  box.innerHTML = `<div class="board-wrap"><div class="board-sizer" style="width:${BW * boardState.zoom}px;height:${BH * boardState.zoom}px">
+      <div class="board" style="width:${BW}px;height:${BH}px;transform:scale(${boardState.zoom})">
+      <svg class="strings" width="${BW}" height="${BH}"></svg>${cards}</div></div></div>
+    <div id="nodeInfo" class="memory-node-info">اضغطي على أي بطاقة لرؤية الأدلة والخيوط المتصلة بها. يمكنك سحب البطاقات لترتيب اللوحة.</div>`;
+
+  const board = box.querySelector('.board'), svg = box.querySelector('svg.strings');
+  const wrap = box.querySelector('.board-wrap');
+  if (!boardState.scrolled) {
+    boardState.scrolled = true;
+    wrap.scrollLeft = pos[center.id].x * boardState.zoom - wrap.clientWidth / 2;
+    wrap.scrollTop = pos[center.id].y * boardState.zoom - wrap.clientHeight / 2;
+  }
+  function drawStrings() {
+    const sel = boardState.selected;
+    svg.innerHTML = edges.map(e => {
+      const a = pos[e.src_id], b = pos[e.dst_id]; if (!a || !b) return '';
+      const src = e.source || 'manual';
+      const sag = Math.min(70, Math.hypot(b.x - a.x, b.y - a.y) * 0.12);
+      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2 + sag;
+      const dim = sel && e.src_id !== sel && e.dst_id !== sel ? ' dim' : '';
+      const hot = sel && (e.src_id === sel || e.dst_id === sel) ? ' hot' : '';
+      return `<g class="str s-${src}${dim}${hot}"><path d="M${a.x} ${a.y - 34} Q${mx} ${my} ${b.x} ${b.y - 34}"/>
+        ${hot ? `<text x="${mx}" y="${(a.y + b.y) / 2 + sag / 2 - 40}" text-anchor="middle">${esc(e.relation || '')}</text>` : ''}</g>`;
+    }).join('');
+  }
+  drawStrings();
+
+  // ---- drag + select ----
+  board.querySelectorAll('.bcard').forEach(card => {
+    const id = Number(card.dataset.id);
+    let drag = null;
+    card.addEventListener('pointerdown', ev => {
+      drag = { x: ev.clientX, y: ev.clientY, ox: pos[id].x, oy: pos[id].y, moved: false };
+      card.setPointerCapture(ev.pointerId);
+    });
+    card.addEventListener('pointermove', ev => {
+      if (!drag) return;
+      const dx = (ev.clientX - drag.x) / boardState.zoom, dy = (ev.clientY - drag.y) / boardState.zoom;
+      if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+      pos[id] = { x: Math.max(60, Math.min(BW - 60, drag.ox + dx)), y: Math.max(50, Math.min(BH - 50, drag.oy + dy)) };
+      card.style.left = pos[id].x + 'px'; card.style.top = pos[id].y + 'px';
+      drawStrings();
+    });
+    card.addEventListener('pointerup', () => {
+      if (drag && drag.moved) { const sp = savedPos(); sp[id] = pos[id]; savePos(sp); }
+      else select(id);
+      drag = null;
+    });
+    card.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); select(id); } });
+  });
+
+  function select(id) {
+    boardState.selected = boardState.selected === id ? null : id;
+    board.querySelectorAll('.bcard').forEach(c => c.classList.toggle('sel', Number(c.dataset.id) === boardState.selected));
+    drawStrings();
+    const info = document.getElementById('nodeInfo');
+    const n = allNodes.find(x => x.id === boardState.selected);
+    if (!n) { info.innerHTML = 'اضغطي على أي بطاقة لرؤية الأدلة والخيوط المتصلة بها.'; return; }
+    const rel = es.filter(e => e.src_id === n.id || e.dst_id === n.id).map(e => {
+      const o = allNodes.find(x => x.id === (e.src_id === n.id ? e.dst_id : e.src_id));
+      if (!o) return '';
+      return `<li><span class="srcb s-${e.source || 'manual'}">${esc(SRC_AR[e.source || 'manual'] || '')}</span>
+        <b>${esc(e.relation || 'مرتبط')}</b> ← ${KIND_ICON[o.kind] || ''} ${esc(o.label)}
+        ${e.note ? `<div class="muted small">${esc(e.note)}</div>` : ''}
+        <button class="trash inline" data-edge="${e.id}" title="قطع هذا الخيط">✂</button></li>`;
+    }).join('');
+    const detail = (n.detail || '').replace(/(https?:\/\/\S+)/g, '\n$1');
+    info.innerHTML = `<strong>${KIND_ICON[n.kind] || ''} ${esc(KIND_AR[n.kind] || n.kind)}: ${esc(n.label)}</strong>
+      <div style="white-space:pre-wrap;margin:6px 0">${esc(detail || 'لا توجد تفاصيل مسجلة')}</div>
+      ${rel ? '<ul class="evid">' + rel + '</ul>' : '<p>لا توجد خيوط لهذه البطاقة بعد.</p>'}`;
+    info.querySelectorAll('[data-edge]').forEach(b => b.onclick = async () => {
+      if (!confirm('قطع هذا الخيط من اللوحة؟')) return;
+      await fetch('/api/network/edges/' + b.dataset.edge, { method: 'DELETE' });
+      boardState.selected = null; renderGraph();
+    });
+  }
+}
+
+function wireForms() {
+  document.getElementById('linkBtn').onclick = async () => { let a = document.getElementById('srcNode').value, b = document.getElementById('dstNode').value, r = document.getElementById('relText').value.trim(); if (!a || !b || a === b || !r) { document.getElementById('linkMsg').textContent = 'اختاري عنصرين مختلفين واكتبي نوع العلاقة'; return; } try { await jsend('/api/network/edges', 'POST', { src_id: +a, dst_id: +b, relation: r, note: '' }); document.getElementById('linkMsg').textContent = 'تم حفظ الرابط'; await renderGraph(); } catch (e) { document.getElementById('linkMsg').textContent = 'تعذر حفظ الرابط'; } };
+  document.getElementById('nodeAdd').onclick = async () => { let label = document.getElementById('nodeLabel').value.trim(); if (!label) { document.getElementById('nodeMsg').textContent = 'اكتبي اسم العنصر'; return; } try { await jsend('/api/network/nodes', 'POST', { kind: document.getElementById('nodeKind').value, label, detail: document.getElementById('nodeDetail').value.trim() }); document.getElementById('nodeMsg').textContent = 'تمت الإضافة'; await load(); } catch (e) { document.getElementById('nodeMsg').textContent = 'تعذر الإضافة'; } };
+}
+
+function wireBoardTools() {
+  document.getElementById('investigate').onclick = async (ev) => {
+    const btn = ev.target, msg = document.getElementById('invMsg');
+    btn.disabled = true; msg.textContent = 'جارٍ التحقيق: ربط الأشخاص والأماكن والأحداث، قراءة المحادثات، والبحث في الإنترنت…';
+    try {
+      const r = await jsend('/api/network/investigate', 'POST');
+      msg.textContent = `تم: ${r.entities} بطاقة · ${r.evidence_links} خيط من الأدلة · ${r.conversation_links} من المحادثات · ${r.web_cards} معلومة من الإنترنت` +
+        (r.ai_enabled ? ` · ${r.ai_links} اقتراح من الذكاء الاصطناعي` : ' · (الذكاء الاصطناعي غير مفعّل — من الإعدادات)');
+      await renderGraph();
+    } catch (e) { msg.textContent = 'تعذّر التحقيق: ' + e.message; }
+    btn.disabled = false;
+  };
+  document.querySelectorAll('[data-src]').forEach(cb => cb.onchange = () => { boardState.show[cb.dataset.src] = cb.checked; renderGraph(); });
+  document.getElementById('showSections').onchange = (e) => { boardState.sections = e.target.checked; renderGraph(); };
+  document.getElementById('zoom').oninput = (e) => {
+    boardState.zoom = Number(e.target.value);
+    const b = document.querySelector('.board'), sz = document.querySelector('.board-sizer');
+    if (b) b.style.transform = `scale(${boardState.zoom})`;
+    if (sz) { sz.style.width = BW * boardState.zoom + 'px'; sz.style.height = BH * boardState.zoom + 'px'; }
+  };
+  document.getElementById('resetLayout').onclick = () => { savePos({}); renderGraph(); };
+}
+
+async function load() {
+  let mems = [];
+  try {
+    mems = (await jget('/api/memories')).memories;
+  } catch (e) {
+    page.innerHTML = '<div class="card muted">تعذّر تحميل الذكريات.</div>';
+    return;
+  }
+
+  page.innerHTML = `
+    <div class="card">
+      <h2>🕵️ شبكة الذكريات — لوحة المحقق</h2>
+      <p class="muted small">مثل لوحة المحققين: كل بطاقة شخص أو مكان أو حدث أو شيء، وكل خيط مربوط بدليل — الجملة التي كتبتها الأسرة وذكرت الطرفين.
+        «ابدأ التحقيق» يقرأ ملف المريض والذكريات والصور والأصوات ومحادثات المساعد، ويجلب معلومات الأماكن والهوايات من الإنترنت، ويقترح الذكاء الاصطناعي خيوطًا إضافية (متقطعة) للمراجعة.
+        لا يُبحث في الإنترنت عن أسماء أفراد الأسرة.</p>
+      <div class="row" style="flex-wrap:wrap;gap:10px;align-items:center">
+        <button class="btn" id="investigate">🔎 ابدأ التحقيق</button>
+        <button class="btn ghost sm" id="resetLayout">إعادة ترتيب اللوحة</button>
+        <label class="small muted">تكبير <input type="range" id="zoom" min="0.4" max="1.3" step="0.05" value="0.85" style="vertical-align:middle;width:110px"></label>
+      </div>
+      <p id="invMsg" class="muted small" aria-live="polite"></p>
+      <div class="legend small">
+        <label><input type="checkbox" data-src="evidence" checked> <i class="lg s-evidence"></i> أدلة من الملف</label>
+        <label><input type="checkbox" data-src="manual" checked> <i class="lg s-manual"></i> يدوي</label>
+        <label><input type="checkbox" data-src="conversation" checked> <i class="lg s-conversation"></i> محادثات</label>
+        <label><input type="checkbox" data-src="web" checked> <i class="lg s-web"></i> الإنترنت</label>
+        <label><input type="checkbox" data-src="ai" checked> <i class="lg s-ai"></i> اقتراح الذكاء الاصطناعي</label>
+        <label><input type="checkbox" id="showSections"> إظهار بطاقات أقسام الملف</label>
+      </div>
+      <div id="graph" style="min-height:250px"></div>
+      <div class="row" style="margin-top:12px;flex-wrap:wrap">
+        <label class="small muted">العنصر الأول<select id="srcNode" style="display:block;padding:10px;border-radius:10px;border:1px solid var(--line)"><option value="">اختيار عنصر حسب النوع والاسم</option></select></label>
+        <input id="relText" placeholder="العلاقة: زار / عاش في / حدث في / مع" style="flex:1;min-width:150px;padding:10px;border:1px solid var(--line);border-radius:10px">
+        <label class="small muted">العنصر المرتبط<select id="dstNode" style="display:block;padding:10px;border-radius:10px;border:1px solid var(--line)"><option value="">اختيار عنصر حسب النوع والاسم</option></select></label>
+        <button class="btn" id="linkBtn">ربط بخيط</button>
+      </div><p id="linkMsg" class="muted small"></p>
+    </div>
+    <div class="card"><h2>إضافة عنصر إلى الشبكة</h2><div class="row" style="flex-wrap:wrap">
+      <select id="nodeKind" style="padding:10px;border-radius:10px;border:1px solid var(--line)"><option value="person">شخص</option><option value="place">مكان</option><option value="event">حدث</option><option value="object">شيء</option><option value="fact">معلومة</option></select>
+      <input id="nodeLabel" placeholder="اسم العنصر" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:10px">
+      <input id="nodeDetail" placeholder="تفاصيل قصيرة" style="flex:2;padding:10px;border:1px solid var(--line);border-radius:10px">
+      <button class="btn" id="nodeAdd">إضافة للشبكة</button></div><p id="nodeMsg" class="muted small"></p></div>
+    <div class="card">
+      <h2>إرفاق صوت أو صورة للذاكرة</h2>
+      <p class="muted small">اختاري الذكرى أو العنصر الذي تريدين إرفاق ملف به، ثم استخدمي خانة الصوت أو خانة الصورة. لا يوجد اختياران متشابهان أو مبهمان.</p>
+      <label class="small muted">الذكرى / العنصر المراد إرفاق الملفات به
+        <select id="mediaTarget" style="display:block;width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin-top:6px"><option value="">اختيار عنصر حسب النوع والاسم</option></select>
+      </label>
+      <div class="row" style="flex-wrap:wrap;margin-top:12px;gap:12px">
+        <label class="btn ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px">رفع صوت <input id="audioUploadNew" type="file" accept="audio/*" style="max-width:190px"></label>
+        <label class="btn ghost" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px">رفع صورة / عنصر بصري <input id="photoUploadNew" type="file" accept="image/*" style="max-width:190px"></label>
+      </div><p id="mediaUploadMsg" class="muted small" aria-live="polite"></p>
+    </div>
+
+    <div class="card">
+      <h2>إضافة ذكرى</h2>
+      <div class="row">
+        <select id="kind" style="padding:10px;border-radius:10px;border:1px solid var(--line)">
+          <option value="person">شخص</option>
+          <option value="place">مكان</option>
+          <option value="routine">روتين</option>
+          <option value="fact">معلومة</option>
+        </select>
+        <input id="subject" placeholder="الموضوع (أحمد، الحديقة…)" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--line)">
+        <input id="fact" placeholder="جملة واحدة واضحة" style="flex:2;padding:10px;border-radius:10px;border:1px solid var(--line)">
+        <button class="btn" id="addmem" style="white-space:nowrap;flex:0 0 auto">إضافة ذكرى</button>
+      </div>
+    </div>
+
+    <div id="list" style="margin-top:14px"></div>
+  `;
+
+  wireBoardTools();
+  await renderGraph();
+  const kindNames={person:'شخص',place:'مكان',event:'حدث',object:'شيء',fact:'معلومة',routine:'روتين'};
+  const targetOpts='<option value="">اختيار ذكرى حسب النوع والاسم</option>'+mems.map(m=>`<option value="${m.id}">${esc(kindNames[m.kind]||m.kind)} — ${esc(m.subject)}</option>`).join('');
+  document.getElementById('mediaTarget').innerHTML=targetOpts;
+  const uploadNewMedia=async(inputId,kind)=>{const inp=document.getElementById(inputId);inp.onchange=async()=>{const f=inp.files?.[0],id=document.getElementById('mediaTarget').value,msg=document.getElementById('mediaUploadMsg');if(!f)return;if(!id){msg.textContent='اختاري العنصر أولا قبل رفع الملف';inp.value='';return;}const fd=new FormData();fd.append('file',f);const url=kind==='photo'?`/api/memories/${id}/photos`:`/api/memories/${id}/audio`;const r=await fetch(url,{method:'POST',body:fd});if(!r.ok){msg.textContent='تعذر رفع الملف. تأكدي أن العنصر المحدد مرتبط بذكرى قابلة لإرفاق ملفات.';return;}msg.textContent=kind==='photo'?'تم رفع الصورة بنجاح':'تم رفع الصوت بنجاح';inp.value='';await renderMedia(id);};};
+  uploadNewMedia('audioUploadNew','audio');uploadNewMedia('photoUploadNew','photo');
+  const list = document.getElementById('list');
+  if (!mems.length) {
+    list.appendChild(el('<div class="card muted">لا توجد ذكريات بعد. أضيفي أول ذكرى.</div>'));
+  }
+
+  for (const m of mems) {
+    const card = el(`
+      <div class="card" style="margin-bottom:14px">
+        <div class="row" style="justify-content:space-between">
+          <strong>${esc(m.subject)}</strong>
+          <span class="tag">${esc(m.kind)}</span>
+        </div>
+        <p>${esc(m.fact)}</p>
+
+        <div class="row" style="margin-top:10px">
+          <label class="btn ghost sm" style="cursor:pointer">
+            + صورة
+            <input type="file" accept="image/*" data-mem="${m.id}" data-type="photo" style="display:none">
+          </label>
+          <label class="btn ghost sm" style="cursor:pointer">
+            + صوت
+            <input type="file" accept="audio/*" data-mem="${m.id}" data-type="audio" style="display:none">
+          </label>
+        </div>
+
+        <div class="album" data-album="${m.id}" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px"></div>
+        <div class="audios" data-audios="${m.id}" style="margin-top:10px"></div>
+      </div>`);
+    list.appendChild(card);
+  }
+
+  // wire uploads
+  page.querySelectorAll('input[type=file]').forEach(inp => {
+    inp.onchange = async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const id = inp.dataset.mem;
+      const url = inp.dataset.type === 'photo'
+        ? `/api/memories/${id}/photos` : `/api/memories/${id}/audio`;
+      const fd = new FormData(); fd.append('file', f);
+      const r = await fetch(url, { method: 'POST', body: fd });
+      if (!r.ok) {
+        const d = await r.json().catch(()=>({}));
+        alert(d.detail || 'تعذّر الرفع');
+        return;
+      }
+      await renderMedia(id);
+      e.target.value = '';
+    };
+  });
+
+  for (const m of mems) await renderMedia(m.id);
+
+  document.getElementById('addmem').onclick = async () => {
+    const subject = document.getElementById('subject').value.trim();
+    const fact = document.getElementById('fact').value.trim();
+    if (!subject || !fact) { alert('اكتبي الموضوع والجملة'); return; }
+    await jsend('/api/memories', 'POST',
+      { kind: document.getElementById('kind').value, subject, fact });
+    load();
+  };
+}
+
+async function renderMedia(memId) {
+  const box = page.querySelector(`[data-album="${memId}"]`);
+  const abox = page.querySelector(`[data-audios="${memId}"]`);
+  try {
+    const [ph, au] = await Promise.all([
+      jget(`/api/memories/${memId}/photos`),
+      jget(`/api/memories/${memId}/audio`),
+    ]);
+
+    box.innerHTML = ph.photos.length ? ph.photos.map(p => `
+      <figure style="margin:0;width:130px">
+        <img src="/api/memory-photo/${p.id}" alt="${esc(p.label)}"
+             style="width:130px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">
+        <figcaption class="muted small" style="text-align:center;margin-top:4px">${esc(p.label)}</figcaption>
+      </figure>`).join('') : '<span class="muted small">لا توجد صور بعد</span>';
+
+    abox.innerHTML = au.audio.length ? au.audio.map(a => `
+      <div style="margin-bottom:8px">
+        <div class="muted small">${esc(a.label)}</div>
+        <audio controls src="/api/audio/${a.id}" style="width:100%;max-width:340px"></audio>
+      </div>`).join('') : '';
+  } catch (e) { /* leave blanks */ }
+}
+
+  const h = await jget('/health');
+  if (h.demo_mode) document.getElementById('demo-badge').hidden = false;
+  load();
+});
+</script>
+</body>
+</html>

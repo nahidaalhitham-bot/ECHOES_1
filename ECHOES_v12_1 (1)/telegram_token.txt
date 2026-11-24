@@ -1,0 +1,3 @@
+# ECHOES - Telegram bot token (from @BotFather). Read automatically when the app starts.
+# Keep this file private: anyone with the token can control the bot.
+9234826146:AAGwWjfkVdhIPa7-ZIKC3_0afSh764bgvtI

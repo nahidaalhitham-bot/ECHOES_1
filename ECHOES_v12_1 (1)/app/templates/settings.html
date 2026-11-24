@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECHOES — الإعدادات</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+  <div class="demo-badge" id="demo-badge" hidden>وضع العرض التجريبي — البيانات وهمية</div>
+  <div id="app"></div>
+<script src="/static/shell.js"></script>
+<script>
+requireAuth().then(async () => {
+document.getElementById('app').innerHTML = shell("settings", "إعدادات النظام", "اسم المساعد وعبارة التنشيط والصوت");
+const page = document.getElementById('page');
+
+async function load() {
+  const s = await jget('/api/assistant/settings');
+  page.innerHTML = `
+    <div class="card">
+      <h2>المساعد الصوتي</h2>
+      <div class="field"><label>اسم المساعد</label><input id="assistant_name" value="${esc(s.assistant_name)}"></div>
+      <div class="field"><label>عبارة التنشيط</label><input id="wake_phrase" value="${esc(s.wake_phrase)}"></div>
+      <div class="field"><label>اللغة</label>
+        <select id="language">
+          <option value="ar" ${s.language==='ar'?'selected':''}>العربية</option>
+          <option value="en" ${s.language==='en'?'selected':''}>English</option>
+        </select>
+      </div>
+      <div class="field"><label><input type="checkbox" id="voice_enabled" style="width:auto" ${s.voice_enabled?'checked':''}> تفعيل الصوت</label></div>
+      <div class="field"><label><input type="checkbox" id="proactive_reminders" style="width:auto" ${s.proactive_reminders?'checked':''}> تفعيل التذكير التلقائي</label></div>
+      <div class="row"><button class="btn" id="save">حفظ وتطبيق</button><span id="msg" class="muted small"></span></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>إشعارات الطوارئ — وصول الرسائل إلى الهاتف</h2>
+      <p class="muted small">بدون إعداد قناة، تُنشأ التنبيهات داخل التطبيق فقط ولا تصل رسالة إلى الهاتف.</p>
+
+      <div class="card" id="tgwizard" style="margin:12px 0 16px;border:2px solid #2aa3dd;background:#f3fbff">
+        <h3 style="margin-top:0">✈️ ربط تيليجرام بضغطة — الطريقة الأسهل</h3>
+        <ol class="small" style="margin:6px 0 10px;padding-inline-start:20px;line-height:1.9">
+          <li>افتحي <a href="https://t.me/BotFather" target="_blank" rel="noopener"><b>@BotFather</b></a> في تيليجرام ← أرسلي <code>/newbot</code> ← اختاري اسمًا ← انسخي <b>الرمز (Token)</b>.
+            <span class="muted">(إذا عندك بوت سابق وكان رمزه محفوظًا، اتركي الخانة فارغة.)</span></li>
+          <li>الصقي الرمز هنا واضغطي «إنشاء رابط الانضمام».</li>
+          <li>امسحي الرمز أو افتحي الرابط من جوالك واضغطي <b>Start</b> — يرتبط تلقائيًا. كل فرد في العائلة يفعل نفس الشيء.</li>
+        </ol>
+        <div class="row" style="flex-wrap:wrap;gap:8px">
+          <input id="tg_wiz_token" placeholder="123456789:AA… (رمز البوت)" style="flex:1;min-width:240px;padding:10px;border-radius:10px;border:1px solid var(--line);direction:ltr;text-align:left">
+          <button class="btn" id="tg_wiz_start">إنشاء رابط الانضمام</button>
+        </div>
+        <div id="tg_wiz_box" style="margin-top:10px"></div>
+        <div id="tg_wiz_linked" class="small" style="margin-top:6px"></div>
+      </div>
+      <div class="field"><label>قناة الإرسال</label>
+        <select id="channel">
+          <option value="none">بدون (تنبيهات داخل التطبيق فقط)</option>
+          <option value="email">بريد إلكتروني (Email)</option>
+          <option value="whatsapp">WhatsApp</option>
+          <option value="telegram">Telegram</option>
+          <option value="both">Telegram + بريد إلكتروني</option>
+        </select>
+      </div>
+      <div class="field"><label>Telegram Bot Token</label>
+        <input id="telegram_token" placeholder="اتركيه فارغًا للإبقاء على المحفوظ"></div>
+      <div class="field"><label>Telegram Chat ID</label><input id="telegram_chat_id"></div>
+      <div id="wa-fields">
+        <div class="field"><label>WhatsApp Access Token</label>
+          <input id="whatsapp_token" placeholder="اتركيه فارغًا للإبقاء على المحفوظ"></div>
+        <div class="field"><label>WhatsApp Phone Number ID (المرسل)</label>
+          <input id="whatsapp_phone_id" placeholder="مثال: 123456789012345" style="direction:ltr;text-align:left"></div>
+        <div class="field"><label>رقم واتساب المستلم</label>
+          <input id="whatsapp_to" placeholder="9665XXXXXXXX بدون +" style="direction:ltr;text-align:left"></div>
+        <p class="muted small">
+          يحتاج حساب Meta Business وتطبيق واتساب معتمد. واتساب يسمح بالرسائل الحرة فقط
+          خلال ٢٤ ساعة من آخر رسالة من المستلم؛ خارجها يلزم قالب معتمد.
+        </p>
+      </div>
+
+      <div id="email-fields" style="margin:6px 0 14px">
+        <div class="row" style="margin-bottom:6px"><button type="button" class="btn ghost sm" id="gmailfill">تعبئة إعدادات Gmail تلقائيًا</button></div>
+        <div class="field"><label>خادم البريد (SMTP Host)</label>
+          <input id="smtp_host" placeholder="smtp.gmail.com" style="direction:ltr;text-align:left">
+          <div id="hostwarn" class="small" style="color:#b42318;display:none">⚠️ هذا رقم المنفذ وليس اسم الخادم. لجيميل اكتبي: smtp.gmail.com</div></div>
+        <div class="field"><label>المنفذ</label>
+          <input id="smtp_port" value="587" style="direction:ltr;text-align:left"></div>
+        <div class="field"><label>بريد المرسل (SMTP User)</label>
+          <input id="smtp_user" placeholder="you@gmail.com" style="direction:ltr;text-align:left"></div>
+        <div class="field"><label>كلمة مرور التطبيق</label>
+          <input id="smtp_password" type="password" placeholder="اتركيها فارغة للإبقاء على المحفوظ" style="direction:ltr;text-align:left"></div>
+        <div class="field"><label>بريد المستلم</label>
+          <input id="email_to" placeholder="caregiver@example.com" style="direction:ltr;text-align:left"></div>
+        <p class="muted small">
+          جيميل يحتاج «كلمة مرور تطبيق» لا كلمة مرور حسابك.
+          أو استخدمي SMTP بدون كلمة مرور. للإرسال التلقائي بالبريد لا حاجة لحساب أعمال.
+        </p>
+      </div>
+
+      <div class="card" style="margin:14px 0;background:#fbfaff">
+        <h3>أرقام هواتف للتنبيه — بدون رمز ولا حساب</h3>
+        <p class="muted small">
+          أضيفي رقم ولي الأمر هنا. عند حدوث تنبيه ستحصلين على رابط جاهز:
+          <b>رسالة نصية</b> أو <b>واتساب</b> — تفتحينه وتضغطين إرسال.
+          لا يحتاج رمزًا ولا حساب أعمال. لكنه <b>لا يُرسل تلقائيًا</b>؛ الإرسال التلقائي يحتاج تيليجرام أو WhatsApp Cloud.
+        </p>
+        <ul id="contacts" class="list"></ul>
+        <div class="row" style="margin-top:8px">
+          <input id="cname" placeholder="الاسم (اختياري)" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--line)">
+          <input id="cphone" placeholder="+9665XXXXXXXX" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);direction:ltr;text-align:left">
+          <select id="cchan" style="padding:10px;border-radius:10px;border:1px solid var(--line)">
+            <option value="sms">رسالة نصية</option>
+            <option value="whatsapp_link">واتساب</option>
+          </select>
+          <button class="btn" id="addcontact">إضافة رقم</button>
+        </div>
+        <p id="cmsg" class="muted small"></p>
+      </div>
+
+      <div class="row">
+        <button class="btn" id="savenotif">حفظ قناة الإشعارات</button>
+        <button class="btn ghost" id="testnotif">إرسال رسالة تجريبية</button>
+        <span id="nmsg" class="muted small"></span>
+      </div>
+      <p class="muted small" id="ready"></p>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>سجل الإرسال</h2>
+      <ul class="list" id="outbox"></ul>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>الخصوصية والأمان</h2>
+      <ul class="list">
+        <li><span>تشفير الاتصال</span><span class="tag ok">مفعّل (محلي)</span></li>
+        <li><span>صلاحيات لمقدمي رعاية محددين</span><span class="tag warn">قيد الإعداد</span></li>
+        <li><span>عدم كشف الموقع لغير المصرح لهم</span><span class="tag ok">مطبّق</span></li>
+        <li><span>الموافقة قبل التعرف على الوجه</span><span class="tag ok">مطبّق</span></li>
+        <li><span>حذف البيانات الشخصية</span><span class="tag ok">متاح</span></li>
+      </ul>
+    </div>
+  `;
+  // ---- notifications ----
+  const ns = await jget('/api/notify/settings');
+  document.getElementById('channel').value = ns.channel;
+  document.getElementById('telegram_chat_id').value = ns.telegram_chat_id || '';
+  document.getElementById('whatsapp_phone_id').value = ns.whatsapp_phone_id || '';
+  document.getElementById('whatsapp_to').value = ns.whatsapp_to || '';
+  document.getElementById('smtp_host').value = ns.smtp_host || '';
+  document.getElementById('smtp_port').value = ns.smtp_port || '587';
+  document.getElementById('smtp_user').value = ns.smtp_user || '';
+  document.getElementById('email_to').value = ns.email_to || '';
+  const REASON = {
+    ready: 'القناة جاهزة — ستصل رسائل الخروج من المنزل إلى الهاتف.',
+    missing_token: 'لم يُدخل رمز البوت — الرسائل لن تُرسل. احصلي عليه من @BotFather.',
+    missing_chat_id: 'لم يُدخل معرّف المحادثة — الرسائل لن تُرسل.',
+    no_channel: 'لم تُختار قناة — التنبيهات داخل التطبيق فقط.',
+    missing_wa_token: 'لم يُدخل رمز وصول واتساب — الرسائل لن تُرسل.',
+    missing_wa_phone_id: 'لم يُدخل معرّف رقم واتساب المرسل.',
+    missing_wa_to: 'لم يُدخل رقم واتساب المستلم.',
+    missing_smtp_host: 'لم يُدخل خادم البريد (SMTP Host).',
+    smtp_host_is_port: 'خانة خادم البريد فيها رقم المنفذ (587) — اكتبي smtp.gmail.com لجيميل، أو اضغطي «تعبئة إعدادات Gmail».',
+    missing_email_to: 'لم يُدخل بريد المستلم.',
+  };
+  const el = document.getElementById('ready');
+  el.textContent = REASON[ns.reason] || REASON.no_channel;
+  el.style.color = ns.ready ? 'var(--ok)' : 'var(--warn)';
+  el.style.fontWeight = ns.ready ? '700' : '400';
+
+  // ---- Gmail helper + host check ----
+  const hostEl = document.getElementById('smtp_host');
+  const checkHost = () => {
+    document.getElementById('hostwarn').style.display = /^\s*\d+\s*$/.test(hostEl.value) ? 'block' : 'none';
+  };
+  hostEl.oninput = checkHost; checkHost();
+  document.getElementById('gmailfill').onclick = () => {
+    hostEl.value = 'smtp.gmail.com';
+    document.getElementById('smtp_port').value = '587';
+    checkHost();
+  };
+
+  // ---- one-tap Telegram linking ----
+  let tgTimer = null;
+  const tgLinked = (ids) => {
+    if (ids) document.getElementById('telegram_chat_id').value = ids.join(',');
+    document.getElementById('tg_wiz_linked').innerHTML = ids && ids.length
+      ? `✅ مربوط بتيليجرام: <b>${ids.length}</b> ${ids.length === 1 ? 'محادثة' : 'محادثات'} — <a href="#" id="tg_clear">إلغاء ربط الكل</a>`
+      : '<span class="muted">لا يوجد أحد مربوط بعد.</span>';
+    const c = document.getElementById('tg_clear');
+    if (c) c.onclick = async (e) => { e.preventDefault(); if (!confirm('إلغاء ربط كل المحادثات؟')) return;
+      await jsend('/api/telegram/link/clear', 'POST'); load(); };
+  };
+  tgLinked((ns.telegram_chat_id || '').split(',').filter(x => x.trim()));
+  document.getElementById('tg_wiz_start').onclick = async (ev) => {
+    const box = document.getElementById('tg_wiz_box');
+    ev.target.disabled = true;
+    box.innerHTML = '<p class="muted small">جارٍ التحقق من الرمز…</p>';
+    let r;
+    try { r = await jsend('/api/telegram/link/start', 'POST', { token: document.getElementById('tg_wiz_token').value }); }
+    catch (e) { r = { ok: false, error: 'تعذّر الاتصال' }; }
+    ev.target.disabled = false;
+    if (!r.ok) { box.innerHTML = `<div class="answer-box warn">${esc(r.error || 'فشل')}</div>`; return; }
+    box.innerHTML = `<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <div style="background:#fff;padding:6px;border-radius:10px;line-height:0">${r.qr_svg || ''}</div>
+        <div style="flex:1;min-width:220px">
+          <div class="small">البوت: <b>@${esc(r.bot)}</b></div>
+          <a class="btn" href="${esc(r.url)}" target="_blank" rel="noopener" style="display:inline-block;margin:8px 0">فتح البوت والضغط على Start</a>
+          <div class="small muted">أو أرسلي هذا الرابط لأفراد العائلة (صالح ${r.minutes} دقيقة):</div>
+          <input readonly value="${esc(r.url)}" onclick="this.select()" style="width:100%;direction:ltr;padding:8px;border-radius:8px;border:1px solid var(--line)">
+          <div id="tg_wait" class="small" style="margin-top:6px;color:#1d6fa5">⏳ بانتظار الضغط على Start…</div>
+        </div></div>`;
+    tgLinked(r.linked);
+    clearInterval(tgTimer);
+    const until = Date.now() + r.minutes * 60000;
+    tgTimer = setInterval(async () => {
+      if (Date.now() > until || !document.getElementById('tg_wait')) { clearInterval(tgTimer); return; }
+      try {
+        const c = await jsend('/api/telegram/link/check', 'POST');
+        if (c.ok) {
+          tgLinked(c.linked);
+          if (c.new && c.new.length) {
+            document.getElementById('tg_wait').innerHTML = '✅ تم ربط: <b>' + c.new.map(esc).join('، ') +
+              '</b> — وصلتهم رسالة تأكيد. يمكن لأفراد آخرين الانضمام بنفس الرابط.';
+            document.getElementById('channel').value = (document.getElementById('channel').value === 'email' ? 'both' : 'telegram');
+          }
+        }
+      } catch (e) {}
+    }, 3000);
+  };
+
+  document.getElementById('savenotif').onclick = async () => {
+    if (/^\s*\d+\s*$/.test(hostEl.value) && /@gmail\.com\s*$/i.test(document.getElementById('smtp_user').value)) {
+      hostEl.value = 'smtp.gmail.com';   // a port typed in the host box
+    }
+    await jsend('/api/notify/settings', 'PUT', {
+      channel: document.getElementById('channel').value,
+      telegram_token: document.getElementById('telegram_token').value,
+      telegram_chat_id: document.getElementById('telegram_chat_id').value,
+      whatsapp_token: document.getElementById('whatsapp_token').value,
+      whatsapp_phone_id: document.getElementById('whatsapp_phone_id').value,
+      whatsapp_to: document.getElementById('whatsapp_to').value,
+      smtp_host: document.getElementById('smtp_host').value,
+      smtp_port: document.getElementById('smtp_port').value,
+      smtp_user: document.getElementById('smtp_user').value,
+      smtp_password: document.getElementById('smtp_password').value,
+      email_to: document.getElementById('email_to').value,
+    });
+    document.getElementById('nmsg').textContent = 'تم الحفظ ✔';
+    load();
+  };
+
+  document.getElementById('testnotif').onclick = async () => {
+    const r = await jsend('/api/notify/test', 'POST');
+    document.getElementById('nmsg').textContent = r.delivered
+      ? 'وصلت الرسالة ✔ (' + r.channel + ')' + (r.public_link
+          ? ' — مع رابط عام للموقع المباشر'
+          : ' — بدون رابط عام بعد (أُرسل رابط خرائط جوجل)')
+      : 'لم تُرسل: ' + r.detail;
+  };
+
+  // ---- phone-only contacts ----
+  async function renderContacts() {
+    const d = await jget('/api/alert-contacts');
+    const ul = document.getElementById('contacts');
+    ul.innerHTML = d.contacts.length
+      ? d.contacts.map(c => `<li><span><b>${esc(c.name || c.phone)}</b>
+          <span class="muted small" style="direction:ltr">${esc(c.phone)}</span></span>
+          <span class="tag ${c.channel === 'sms' ? '' : 'ok'}">${c.channel === 'sms' ? 'رسالة نصية' : 'واتساب'}</span>
+          <button class="btn danger sm" data-del="${c.id}">حذف</button></li>`).join('')
+      : '<li class="muted">لا توجد أرقام بعد</li>';
+    ul.querySelectorAll('button[data-del]').forEach(b => {
+      b.onclick = async () => {
+        await fetch('/api/alert-contacts/' + b.dataset.del, { method: 'DELETE' });
+        renderContacts();
+      };
+    });
+  }
+  renderContacts();
+
+  document.getElementById('addcontact').onclick = async () => {
+    const r = await fetch('/api/alert-contacts', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('cname').value,
+        phone: document.getElementById('cphone').value,
+        channel: document.getElementById('cchan').value,
+      }),
+    });
+    const d = await r.json().catch(() => ({}));
+    document.getElementById('cmsg').textContent = r.ok
+      ? 'تمت الإضافة ✔' : (d.detail || 'تعذّرت الإضافة');
+    if (r.ok) { document.getElementById('cphone').value = ''; renderContacts(); }
+  };
+
+  const ob = await jget('/api/notify/outbox?limit=10');
+  document.getElementById('outbox').innerHTML = ob.outbox.length
+    ? ob.outbox.map(o => `<li><div><strong>${esc(o.channel)}</strong>
+        <span class="tag ${o.delivered ? 'ok' : 'warn'}">${o.delivered ? 'وصلت' : 'لم تُرسل'}</span>
+        <div class="muted small">${esc(o.detail || '')}</div></div>
+        <span class="muted small">${esc(o.created_at)}</span></li>`).join('')
+    : '<li class="muted">لا يوجد سجل إرسال</li>';
+
+  // ---- AI + internet for the memory network, camera and assistant ----
+  let aiS = {};
+  try { aiS = await jget('/api/ai/settings'); } catch (e) {}
+  const aiCard = window.el(`<div class="card" style="margin-top:14px">
+    <h2>الذكاء الاصطناعي والإنترنت</h2>
+    <p class="muted small">بدون مفتاح: يعمل كاشف الأشياء على الجهاز، وتُجلب معلومات الأماكن والهوايات من ويكيبيديا، وتُكتب التذكيرات من كلام الأسرة كما هو.
+      مع مفتاح Claude: تذكيرات بصياغة دافئة، تحليل أدق للكاميرا (هل يلمس أو يأكل شيئًا، التصرفات الخطيرة)، اقتراح روابط جديدة في شبكة الذكريات، وإجابات من الإنترنت.</p>
+    <div class="field"><label>مفتاح Anthropic API ${aiS.key_set ? '— محفوظ: ' + esc(aiS.key_masked) : ''}</label>
+      <input id="ai_key" type="password" placeholder="sk-ant-… (اتركيه فارغًا للإبقاء على المحفوظ)" style="direction:ltr;text-align:left"></div>
+    <div class="field"><label>النموذج</label><input id="ai_model" value="${esc(aiS.ai_model || '')}" style="direction:ltr;text-align:left"></div>
+    <div class="field"><label><input type="checkbox" id="ai_web" style="width:auto" ${aiS.ai_web !== false ? 'checked' : ''}> الاستعانة بالإنترنت (أماكن، هوايات، أسئلة عامة) — لا يُبحث أبدًا عن أسماء أفراد الأسرة</label></div>
+    <div class="field"><label><input type="checkbox" id="ai_vision" style="width:auto" ${aiS.ai_vision !== false ? 'checked' : ''}> تحليل لقطات الكاميرا بالذكاء الاصطناعي</label></div>
+    <div class="field"><label>تحليل لقطة كل (ثانية)</label><input id="ai_interval" type="number" min="2" max="120" value="${aiS.ai_interval || 6}"></div>
+    <div class="field"><label>مدة انتظار رد المريض قبل أن يجيب المساعد عنه (ثانية)</label><input id="reply_delay" type="number" min="3" max="120" value="${aiS.reply_delay || 13}"></div>
+    <p class="muted small">كاشف الأشياء المحلي: ${aiS.object_detector ? '✔ جاهز' : '✖ غير منزَّل بعد (يُنزَّل تلقائيًا عند التشغيل مع اتصال إنترنت)'}</p>
+    <div class="row"><button class="btn" id="saveai">حفظ</button>
+      ${aiS.key_set ? '<button class="btn ghost" id="clearai">حذف المفتاح</button>' : ''}
+      <span id="aimsg" class="muted small"></span></div>
+  </div>`);
+  page.insertBefore(aiCard, page.children[1] || null);
+  const saveAI = async (clear) => {
+    try {
+      await jsend('/api/ai/settings', 'PUT', {
+        ai_key: document.getElementById('ai_key').value.trim(), clear_key: !!clear,
+        ai_model: document.getElementById('ai_model').value.trim(),
+        ai_web: document.getElementById('ai_web').checked,
+        ai_vision: document.getElementById('ai_vision').checked,
+        ai_interval: Number(document.getElementById('ai_interval').value) || 6,
+        reply_delay: Number(document.getElementById('reply_delay').value) || 13,
+      });
+      load();
+    } catch (e) { document.getElementById('aimsg').textContent = 'فشل الحفظ'; }
+  };
+  document.getElementById('saveai').onclick = () => saveAI(false);
+  if (document.getElementById('clearai')) document.getElementById('clearai').onclick = () => saveAI(true);
+
+  document.getElementById('save').onclick = async () => {
+    await jsend('/api/assistant/settings', 'PUT', {
+      assistant_name: document.getElementById('assistant_name').value,
+      wake_phrase: document.getElementById('wake_phrase').value,
+      language: document.getElementById('language').value,
+      voice_enabled: document.getElementById('voice_enabled').checked,
+      proactive_reminders: document.getElementById('proactive_reminders').checked,
+    });
+    document.getElementById('msg').textContent = 'تم الحفظ ✔';
+  };
+}
+
+  const h = await jget('/health');
+  if (h.demo_mode) document.getElementById('demo-badge').hidden = false;
+  load();
+});
+</script>
+</body></html>

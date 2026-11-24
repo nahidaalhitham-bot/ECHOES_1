@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECHOES — نظرة عامة</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div id="demo-badge" class="demo-badge" hidden>وضع العرض التجريبي — البيانات وهمية</div>
+  <div id="app"></div>
+<script src="/static/shell.js"></script>
+<script>
+requireAuth().then(async () => {
+document.getElementById('app').innerHTML = shell("dashboard", "نظرة عامة", "حالة المريض والجهاز والتنبيهات");
+const page = document.getElementById('page');
+
+async function load() {
+  const d = await jget('/api/dashboard');
+  const inside = d.inside_safe_zone;
+  const locText = d.last_location
+    ? `${d.last_location.freshness_note}`
+    : 'لا يوجد موقع مسجّل';
+
+  page.innerHTML = `
+    <div class="card" style="background:linear-gradient(120deg,#f0e5fb,#fff);border:1px solid #d8bdf2;margin-bottom:14px">
+      <h2 style="margin-top:0;color:#5a208c">مرحبًا بك في ECHOES — إعداد البداية</h2>
+      <p class="muted">ابدأ بتجهيز المعلومات التي يعتمد عليها التطبيق. لا تُعرض أي معلومات شخصية أو موقع إلا بعد تسجيلها وإعداد الجهاز.</p>
+      <div class="grid c3">
+        <div><strong>١ · ملف المريض</strong><p class="small muted">أدخل الاسم والمعلومات الأساسية والروتين والتفضيلات.</p><a class="btn ghost" href="/profile">فتح الملف</a></div>
+        <div><strong>٢ · الأسرة والذكريات</strong><p class="small muted">أضف الأشخاص والصور والأماكن والأشياء والأصوات واربطها.</p><a class="btn ghost" href="/network">شبكة الذاكرة</a></div>
+        <div><strong>٣ · الموقع والتنبيهات</strong><p class="small muted">أضف الجهاز، اختبر GPS، ثم أعدّ وسيلة إرسال التنبيه.</p><a class="btn ghost" href="/safety">إعداد الأمان</a></div>
+      </div>
+      <p class="small" style="margin-bottom:0"><strong>مهم:</strong> بيانات العرض التجريبي موسومة بوضوح، والموقع لا يُعتبر مباشرًا إلا إذا كان آخر تحديث حقيقيًا وحديثًا.</p>
+    </div>
+    <div class="grid c3">
+      <div class="card">
+        <div class="stat">
+          <div class="badge ${inside === true ? 'badge-ok' : inside === false ? 'badge-warn' : ''}">◉</div>
+          <div>
+            <div class="val">${inside === true ? 'داخل المنزل' : inside === false ? 'خارج النطاق' : 'غير معروف'}</div>
+            <div class="lbl">الموقع الحالي</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="stat">
+          <div class="badge ${d.device_connected ? 'badge-ok' : 'badge-warn'}">▣</div>
+          <div>
+            <div class="val">${d.device_connected ? 'متصل' : 'غير متصل'}</div>
+            <div class="lbl">اتصال القلادة${d.battery != null ? ' · بطارية ' + d.battery + '%' : ''}</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="stat">
+          <div class="badge ${d.open_alerts.length ? 'badge-danger' : ''}">✚</div>
+          <div>
+            <div class="val">${d.open_alerts.length}</div>
+            <div class="lbl">تنبيهات مفتوحة</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid c2" style="margin-top:14px">
+      <div class="card">
+        <h2>المريض</h2>
+        <div style="font-size:20px;font-weight:800;margin-bottom:6px">${esc(d.patient_name)}</div>
+        <p class="muted small">${esc(locText)}</p>
+        <div class="row" style="margin-top:12px">
+          <a class="btn" href="/profile">ملف المريض</a>
+          <a class="btn ghost" href="/safety">الخريطة الكاملة</a>
+          <a class="btn ghost" href="/emergency-center">سجل التنبيهات</a>
+        </div>
+      </div>
+      <div class="card">
+        <h2>آخر التنبيهات</h2>
+        <ul class="list">
+          ${d.open_alerts.length
+            ? d.open_alerts.map(a => `<li><span>${esc(a.message)}</span>
+                <span class="tag danger">${esc(({exited_safe_zone:'خرج من النطاق الآمن', help_requested:'طلب مساعدة', device_offline:'انقطاع الاتصال', stale_location:'موقع قديم', no_recent_location:'لا يوجد موقع', allergen_contact:'لمس شيء يتحسس منه', danger_contact:'يمسك شيئًا خطيرًا', danger_action:'تصرف خطير'})[a.kind] || a.kind)}</span></li>`).join('')
+            : '<li class="muted">لا توجد تنبيهات</li>'}
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>تفضيلات التذكير التلقائي</h2>
+      <p class="muted small">ما تريد الأسرة أن يذكّر به النظام تلقائيًا.</p>
+      <div id="scope" style="white-space:pre-wrap">${esc(d.reminder_scope) || '<span class="muted">لم تُضبط بعد — عدّلها من ملف المريض</span>'}</div>
+      <a class="btn ghost" style="margin-top:12px;display:inline-block" href="/profile">تعديل</a>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>مقدمو الرعاية</h2>
+      <ul class="list">
+        ${d.caregivers.length
+          ? d.caregivers.map(c => `<li><span>${esc(c.full_name)} — ${esc(c.relation||'')}</span>
+              <span class="muted small">${esc(c.phone||'')}</span></li>`).join('')
+          : '<li class="muted">لا يوجد مقدمو رعاية مسجّلون</li>'}
+      </ul>
+      <a class="btn ghost" style="margin-top:12px;display:inline-block" href="/caregivers">إدارة مقدمي الرعاية</a>
+    </div>
+  `;
+  // Telegram not linked yet -> one obvious step
+  try {
+    const tg = await jget('/api/telegram/status');
+    if (tg.token && !tg.linked && tg.url) {
+      const b = document.createElement('div');
+      b.className = 'card';
+      b.style.cssText = 'border:2px solid #2aa3dd;background:#f3fbff;margin-bottom:14px';
+      b.innerHTML = `<h2 style="margin:0 0 6px">✈️ خطوة واحدة لتصلك تنبيهات تيليجرام</h2>
+        <p class="small" style="margin:0 0 10px">افتحي البوت من جوالك واضغطي <b>Start</b> — يرتبط تلقائيًا خلال ثوانٍ وتصلك رسالة تأكيد.</p>
+        <a class="btn" href="${esc(tg.url)}" target="_blank" rel="noopener">فتح @${esc(tg.bot)} في تيليجرام</a>
+        <span class="muted small" style="margin-inline-start:8px">إذا مرّت أكثر من ساعة على التشغيل: الإعدادات ← «ربط تيليجرام بضغطة».</span>`;
+      page.prepend(b);
+    }
+  } catch (e) {}
+}
+
+  const h = await jget('/health');
+  if (h.demo_mode) document.getElementById('demo-badge').hidden = false;
+  load();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECHOES — مقدمو الرعاية</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="demo-badge" id="demo-badge" hidden>وضع العرض التجريبي — البيانات وهمية</div>
+  <div id="app"></div>
+<script src="/static/shell.js"></script>
+<script>
+requireAuth().then(async () => {
+document.getElementById('app').innerHTML = shell("caregivers", "إدارة مقدمي الرعاية", "أضيفي أكثر من مقدم رعاية وصلاحياتهم");
+const page = document.getElementById('page');
+
+let editing = null;
+
+async function load() {
+  const d = await jget('/api/caregivers');
+  page.innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0">مقدمو الرعاية المصرّح لهم</h2>
+        <button class="btn" id="add">+ إضافة مقدم رعاية</button>
+      </div>
+      <ul class="list" id="list"></ul>
+    </div>
+    <div class="card hidden" id="formcard" style="margin-top:14px">
+      <h2 id="formtitle">إضافة مقدم رعاية</h2>
+      <div class="field"><label>الاسم الكامل</label><input id="full_name"></div>
+      <div class="field"><label>صلة القرابة</label><input id="relation" placeholder="الابن، الابنة…"></div>
+      <div class="field"><label>رقم الهاتف</label><input id="phone"></div>
+      <div class="field"><label>البريد الإلكتروني</label><input id="email" type="email"></div>
+      <div class="field"><label>جهة الاتصال في الطوارئ</label><input id="emergency_contact"></div>
+      <div class="field"><label><input type="checkbox" id="is_primary" style="width:auto"> مقدم الرعاية الأساسي</label></div>
+      <div class="row">
+        <button class="btn" id="save">حفظ</button>
+        <button class="btn ghost" id="cancel">إلغاء</button>
+      </div>
+    </div>
+  `;
+
+  const list = document.getElementById('list');
+  if (!d.caregivers.length) {
+    list.appendChild(el('<li class="muted">لا يوجد مقدمو رعاية بعد</li>'));
+  }
+  for (const c of d.caregivers) {
+    const li = el(`
+      <li>
+        <div>
+          <strong>${esc(c.full_name)}</strong>
+          ${c.is_primary ? '<span class="tag ok">أساسي</span>' : ''}
+          <div class="muted small">${esc(c.relation || '')} ${c.phone ? '· ' + esc(c.phone) : ''}</div>
+        </div>
+        <div class="row">
+          <button class="btn ghost sm" data-act="edit" data-id="${c.id}">تعديل</button>
+          <button class="btn danger sm" data-act="del" data-id="${c.id}">حذف</button>
+        </div>
+      </li>`);
+    list.appendChild(li);
+  }
+
+  list.querySelectorAll('button[data-act]').forEach(b => {
+    b.onclick = () => {
+      const id = Number(b.dataset.id);
+      if (b.dataset.act === 'del') return del(id);
+      openForm(d.caregivers.find(x => x.id === id));
+    };
+  });
+
+  document.getElementById('add').onclick = () => openForm(null);
+  document.getElementById('cancel').onclick = () => {
+    document.getElementById('formcard').classList.add('hidden');
+  };
+  document.getElementById('save').onclick = save;
+}
+
+function openForm(c) {
+  editing = c ? c.id : null;
+  document.getElementById('formcard').classList.remove('hidden');
+  document.getElementById('formtitle').textContent = c ? 'تعديل مقدم رعاية' : 'إضافة مقدم رعاية';
+  for (const k of ['full_name','relation','phone','email','emergency_contact']) {
+    document.getElementById(k).value = c ? (c[k] || '') : '';
+  }
+  document.getElementById('is_primary').checked = c ? !!c.is_primary : false;
+}
+
+async function save() {
+  const body = {
+    full_name: document.getElementById('full_name').value.trim(),
+    relation: document.getElementById('relation').value,
+    phone: document.getElementById('phone').value,
+    email: document.getElementById('email').value,
+    emergency_contact: document.getElementById('emergency_contact').value,
+    is_primary: document.getElementById('is_primary').checked,
+  };
+  if (!body.full_name) { alert('الاسم مطلوب'); return; }
+  if (editing) await jsend('/api/caregivers/' + editing, 'PUT', body);
+  else await jsend('/api/caregivers', 'POST', body);
+  load();
+}
+
+async function del(id) {
+  if (!confirm('حذف مقدم الرعاية؟')) return;
+  await fetch('/api/caregivers/' + id, { method: 'DELETE' });
+  load();
+}
+
+  const h = await jget('/health');
+  if (h.demo_mode) document.getElementById('demo-badge').hidden = false;
+  load();
+});
+</script>
+</body>
+</html>

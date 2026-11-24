@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECHOES — العائلة والأبناء</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  .grid-people { display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); }
+  .person { background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px; }
+  .person .portrait {
+    width:100%; aspect-ratio:1/1; border-radius:12px; background:#f1effa;
+    display:grid; place-items:center; overflow:hidden; margin-bottom:10px;
+    color:var(--muted); font-size:13px; text-align:center; padding:8px;
+  }
+  .person .portrait img { width:100%; height:100%; object-fit:cover; }
+  .person h3 { margin:0 0 2px; font-size:17px; }
+  .person .rel { color:var(--muted); font-size:14px; margin-bottom:10px; }
+  .state { display:inline-block; padding:2px 9px; border-radius:7px; font-size:12px; font-weight:700; }
+  .state.reg { background:var(--ok-soft); color:var(--ok); }
+  .state.noreg { background:var(--warn-soft); color:var(--warn); }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+<script src="/static/shell.js"></script>
+<script>
+requireAuth().then(async () => {
+  document.getElementById('app').innerHTML =
+    shell("family", "العائلة والأبناء", "أضيفي كل فرد وصورته — الكاميرا ستتعرّف عليه");
+  const page = document.getElementById('page');
+
+  function personCard(p) {
+    return '<div class="person">' +
+      '<div class="portrait" id="pt_' + p.id + '">لا توجد صورة</div>' +
+      '<h3>' + esc(p.name) + '</h3>' +
+      '<div class="rel">' + esc(p.relation || '') + '</div>' +
+      '<div style="margin-bottom:10px"><span class="state" id="st_' + p.id + '">…</span></div>' +
+      '<div class="row">' +
+        '<label class="btn ghost sm" style="cursor:pointer;margin:0">رفع صورة' +
+          '<input type="file" accept="image/*" data-up="' + p.id + '" style="display:none">' +
+        '</label>' +
+        '<button class="btn danger sm" data-del="' + p.id + '">حذف</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  async function loadPhoto(id) {
+    const box = document.getElementById('pt_' + id);
+    const st = document.getElementById('st_' + id);
+    if (!box) return;
+    try {
+      const r = await fetch('/api/family/' + id + '/photo');
+      if (r.ok) {
+        const url = URL.createObjectURL(await r.blob());
+        box.innerHTML = '<img src="' + url + '" alt="">';
+      }
+    } catch (e) {}
+    try {
+      const d = await jget('/api/family/' + id + '/recognition-status');
+      if (st) {
+        st.className = 'state ' + (d.ready ? 'reg' : 'noreg');
+        st.textContent = d.ready ? 'جاهز للتعرف'
+          : (d.has_photo ? 'الصورة بلا وجه واضح' : 'يحتاج صورة');
+      }
+    } catch (e) {}
+  }
+
+  function wire() {
+    page.querySelectorAll('input[data-up]').forEach(function (inp) {
+      inp.onchange = async function (ev) {
+        const f = ev.target.files[0];
+        if (!f) return;
+        const fd = new FormData();
+        fd.append('file', f);
+        const r = await fetch('/api/family/' + inp.dataset.up + '/photo',
+                              { method: 'POST', body: fd });
+        const d = await r.json().catch(function () { return {}; });
+        if (!r.ok) { alert(d.detail || 'تعذّر رفع الصورة'); return; }
+        if (d.face_descriptor_created === false) {
+          alert('حُفظت الصورة، لكن لم أجد وجهًا واضحًا. استخدمي صورة أوضح.');
+        }
+        ev.target.value = '';
+        load();
+      };
+    });
+    page.querySelectorAll('button[data-del]').forEach(function (b) {
+      b.onclick = async function () {
+        if (!confirm('حذف هذا الفرد وصوره؟')) return;
+        await fetch('/api/family/' + b.dataset.del, { method: 'DELETE' }).catch(function () {});
+        load();
+      };
+    });
+  }
+
+  async function load() {
+    let people = [];
+    try { people = (await jget('/api/family')).people; } catch (e) { people = []; }
+
+    page.innerHTML =
+      '<div class="card">' +
+        '<h2>إضافة فرد من العائلة</h2>' +
+        '<div class="row">' +
+          '<input id="n_name" placeholder="الاسم الكامل" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--line)">' +
+          '<input id="n_rel" placeholder="القرابة (الابن، الابنة…)" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--line)">' +
+          '<input id="n_phone" placeholder="الهاتف (اختياري)" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--line)">' +
+          '<button class="btn" id="add">إضافة</button>' +
+        '</div>' +
+        '<p class="muted small" id="msg" style="margin-top:8px"></p>' +
+      '</div>' +
+      '<div class="card" style="margin-top:14px">' +
+        '<div class="row" style="justify-content:space-between">' +
+          '<h2 style="margin:0">أفراد العائلة (' + people.length + ')</h2>' +
+          '<span class="muted small">ارفعي صورة واضحة لكل فرد</span>' +
+        '</div>' +
+        '<div class="grid-people" id="list" style="margin-top:14px">' +
+          (people.length ? people.map(personCard).join('')
+                         : '<div class="muted">لا يوجد أفراد بعد.</div>') +
+        '</div>' +
+      '</div>';
+
+    for (let i = 0; i < people.length; i++) { loadPhoto(people[i].id); }
+    wire();
+
+    const addBtn = document.getElementById('add');
+    if (addBtn) {
+      addBtn.onclick = async function () {
+        const name = document.getElementById('n_name').value.trim();
+        const rel = document.getElementById('n_rel').value.trim();
+        if (!name || !rel) {
+          document.getElementById('msg').textContent = 'الاسم والقرابة مطلوبان';
+          return;
+        }
+        const r = await fetch('/api/family', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name,
+            relation: rel,
+            phone: document.getElementById('n_phone').value,
+          }),
+        });
+        const d = await r.json().catch(function () { return {}; });
+        if (!r.ok) {
+          document.getElementById('msg').textContent = d.detail || 'تعذّرت الإضافة';
+          return;
+        }
+        load();
+      };
+    }
+  }
+
+  load();
+});
+</script>
+</body>
+</html>

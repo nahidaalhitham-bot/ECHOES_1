@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECHOES — كود المشروع</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  .code-layout { display:flex; gap:16px; align-items:flex-start; }
+  .filelist { flex:0 0 260px; max-height:74vh; overflow-y:auto;
+              background:#fff; border:1px solid var(--line); border-radius:12px; padding:8px; }
+  .filelist a { display:flex; justify-content:space-between; gap:8px;
+                padding:7px 10px; border-radius:8px; text-decoration:none;
+                color:var(--ink); font-size:14px; }
+  .filelist a:hover { background:var(--brand-soft); }
+  .filelist a.active { background:var(--brand); color:#fff; font-weight:700; }
+  .filelist .n { color:var(--muted); font-size:12px; }
+  .filelist a.active .n { color:#d9d5f5; }
+  .viewer { flex:1; min-width:0; }
+  .viewer pre {
+    margin:0; padding:16px; background:#12141a; color:#e6e6f0;
+    border-radius:12px; overflow:auto; max-height:74vh;
+    direction:ltr; text-align:left; font-size:13px; line-height:1.55;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  .viewer .head { display:flex; justify-content:space-between; align-items:center;
+                  margin-bottom:10px; gap:10px; flex-wrap:wrap; }
+  .kv { color:var(--muted); font-size:13px; }
+  .py-kw{color:#c792ea} .py-str{color:#c3e88d} .py-cm{color:#697098;font-style:italic}
+  .py-def{color:#82aaff} .html-tag{color:#f07178} .html-attr{color:#ffcb6b}
+</style>
+</head>
+<body>
+  <div id="app"></div>
+<script src="/static/shell.js"></script>
+<script>
+requireAuth().then(async () => {
+document.getElementById('app').innerHTML = shell("code", "كود المشروع", "كل ملفات التطبيق — للقراءة فقط");
+const page = document.getElementById('page');
+
+const d = await jget('/api/code/files');
+const total = d.files.reduce((a, f) => a + f.lines, 0);
+
+page.innerHTML = `
+  <div class="card" style="margin-bottom:14px">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <strong>${d.files.length} ملفًا · ${total.toLocaleString()} سطرًا</strong>
+        <div class="kv">كل شيء في هذا المشروع مكتوب بلغة بايثون وHTML وCSS.</div>
+      </div>
+      <a class="btn ghost sm" href="/api/code/file?path=README.md" target="_blank">ملف التعليمات</a>
+    </div>
+  </div>
+  <div class="code-layout">
+    <div class="filelist" id="files"></div>
+    <div class="viewer">
+      <div class="head">
+        <strong id="fname">اختر ملفًا</strong>
+        <span class="kv" id="fmeta"></span>
+      </div>
+      <pre id="src">← اضغطي على أي ملف لعرض كوده</pre>
+    </div>
+  </div>
+`;
+
+const list = document.getElementById('files');
+for (const f of d.files) {
+  const a = el(`<a href="#" data-p="${esc(f.path)}">
+      <span>${esc(f.path)}</span><span class="n">${f.lines}</span></a>`);
+  a.onclick = (ev) => { ev.preventDefault(); open(f.path, a); };
+  list.appendChild(a);
+}
+
+function escColor(t) {
+  const esc = (x) => x.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+  const KW = new Set(['def','class','return','if','else','elif','for','while',
+    'import','from','try','except','finally','with','as','async','await',
+    'None','True','False','and','or','not','in','is','lambda','yield','raise']);
+  const out = [];
+  let i = 0;
+  while (i < t.length) {
+    const ch = t[i];
+    if (ch === '#' || (ch === '/' && t[i+1] === '/')) {
+      let j = t.indexOf('\n', i);
+      if (j === -1) j = t.length;
+      out.push('<span class="py-cm">' + esc(t.slice(i, j)) + '</span>');
+      i = j; continue;
+    }
+    if (t.startsWith('"""', i) || t.startsWith("'''", i)) {
+      const q = t.slice(i, i+3);
+      let j = t.indexOf(q, i + 3);
+      j = j === -1 ? t.length : j + 3;
+      out.push('<span class="py-str">' + esc(t.slice(i, j)) + '</span>');
+      i = j; continue;
+    }
+    if (ch === '"' || ch === "'") {
+      let j = i + 1;
+      while (j < t.length && t[j] !== ch && t[j] !== '\n') {
+        j += (t[j] === '\\') ? 2 : 1;
+      }
+      j = Math.min(j + 1, t.length);
+      out.push('<span class="py-str">' + esc(t.slice(i, j)) + '</span>');
+      i = j; continue;
+    }
+    if (/[A-Za-z_]/.test(ch)) {
+      let j = i;
+      while (j < t.length && /[A-Za-z0-9_]/.test(t[j])) j++;
+      const w = t.slice(i, j);
+      out.push(KW.has(w) ? '<span class="py-kw">' + esc(w) + '</span>' : esc(w));
+      i = j; continue;
+    }
+    out.push(esc(ch));
+    i++;
+  }
+  return out.join('');
+}
+
+async function open(path, linkEl) {
+  document.querySelectorAll('.filelist a').forEach(a => a.classList.remove('active'));
+  if (linkEl) linkEl.classList.add('active');
+  const f = await jget('/api/code/file?path=' + encodeURIComponent(path));
+  document.getElementById('fname').textContent = f.path;
+  document.getElementById('fmeta').textContent = `${f.lines} سطرًا · ${(f.bytes/1024).toFixed(1)} كيلوبايت`;
+  const pre = document.getElementById('src');
+  pre.innerHTML = escColor(f.text);
+}
+
+  const h = await jget('/health');
+  const badge = document.getElementById('demo-badge');
+  if (badge && !h.demo_mode) badge.hidden = true;
+});
+</script>
+</body>
+</html>
