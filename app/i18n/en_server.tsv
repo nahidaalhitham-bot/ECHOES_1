@@ -1,0 +1,121 @@
+خرج من النطاق الآمن «{q}» (يبعد {n} م عن المركز)	Left the safe zone “{q}” ({n} m from the center)
+عاد إلى النطاق الآمن «{q}»	Returned to the safe zone “{q}”
+طلب مساعدة من الجهاز	Help requested from the device
+انقطاع اتصال الجهاز منذ {n} دقيقة	Device offline for {n} minutes
+بطارية الجهاز منخفضة ({n}%)	Device battery low ({n}%)
+بطارية الجهاز {n}% — يُفضّل الشحن.	Device battery {n}% — charging recommended.
+حديث	Recent
+قديم — آخر تحديث قبل {n} دقيقة	Stale — last update {n} minutes ago
+لا يوجد تحديث موقع منذ {n} دقيقة — الموقع الحالي غير متاح	No location update for {n} minutes — current location unavailable
+لا يوجد موقع مسجّل لهذا الجهاز	No location recorded for this device
+لا يوجد موقع مسجّل. لا نعرف مكانه، ولا نفترض أنه في خطر.	No location recorded. We don't know where he is, and we don't assume he is in danger.
+الموقع الحالي غير متاح — هذا لا يعني أنه في خطر.	Current location unavailable — this does not mean he is in danger.
+الموقع حديث لكنه ليس بثًّا مباشرًا.	The location is recent but not a live stream.
+آخر موقع معروف فقط — لا يوجد تحديث حديث.	Last known location only — no recent update.
+الجهاز مرتبط لكنه لم يرسل أي إحداثيات بعد.	The device is linked but hasn't sent any coordinates yet.
+الموقع حيّ.	Location is live.
+لا يوجد جهاز حقيقي مرتبط. أضيفي جهازًا من صفحة الجهاز.	No real device linked. Add one on the device page.
+محاكي الجهاز	Device simulator
+جوال المريض	Patient's phone
+جهاز المحاكاة	Simulator device
+بيانات محاكاة — ليست موقعًا حقيقيًا	Simulated data — not a real location
+ستظهر الخريطة هنا تلقائيًا أول ما يصل موقعه.	The map will appear here as soon as his location arrives.
+يظهر موقعه هنا تلقائيًا إذا خرج من النطاق الآمن.	His location appears here automatically if he leaves the safe zone.
+المريض داخل {q} — آخر تأكيد قبل {n} دقيقة. يظهر موقعه هنا تلقائيًا إذا خرج من النطاق الآمن.	The patient is inside {q} — last confirmed {n} minutes ago. His location appears here automatically if he leaves the safe zone.
+المريض داخل المنزل — آخر تأكيد قبل {n} دقيقة. يظهر موقعه هنا تلقائيًا إذا خرج من النطاق الآمن.	The patient is at home — last confirmed {n} minutes ago. His location appears here automatically if he leaves the safe zone.
+النطاق الآمن	Safe zone
+البريد أو كلمة المرور غير صحيحة	Incorrect email or password
+البريد مستخدم مسبقًا	This email is already in use
+التسجيل مفتوح للاستخدام الأول فقط — أضف الحسابات من الإعدادات	Registration is only open for first use — add accounts in Settings
+الرمز غير صحيح أو انتهت صلاحيته	The code is wrong or has expired
+انتهت صلاحية الرمز أو غير صحيح — حدّثي الصفحة على جوال المريض وامسحي الرمز الجديد.	The code expired or is wrong — refresh the page on the patient's phone and scan the new code.
+انتهت صلاحية الرابط	The link has expired
+رمز الجهاز غير صالح	Invalid device token
+رمز الساعة غير صالح	Invalid watch code
+هذا ليس رمز ساعة ECHOES	This isn't an ECHOES watch code
+اسم الجهاز مستخدم	Device name already in use
+الموافقة مطلوبة قبل تسجيل الوجه	Consent is required before registering a face
+لم أجد وجهًا واضحًا في الصورة	I couldn't find a clear face in the photo
+تعذّر قراءة الصورة	Could not read the image
+هذا الملف غير متاح للعرض	This file can't be displayed
+احفظي هذا الرمز الآن — لن يُعرض مرة أخرى.	Save this token now — it won't be shown again.
+أرسلي هذا الرابط للمسؤول المصرح له فقط. ينتهي تلقائيًا.	Send this link only to the authorized caregiver. It expires automatically.
+رقم الهاتف غير صالح	Invalid phone number
+الرقم مسجَّل مسبقًا لهذه القناة	This number is already registered for this channel
+هذه أسئلة مراجعة من شبكة ذاكرتكم — ليست تشخيصًا طبيًا.	These are review questions from your memory network — not a medical diagnosis.
+شخص مهم في الملف	Important person in the profile
+مرتبط بالشخص	Linked to the person
+مرتبط بمعلومة الملف	Linked to a profile fact
+مرفق في الملف	Attached in the profile
+مصدره المعلومات التي أدخلتها الأسرة	Source: information entered by the family
+ذكرى	Memory
+ذكريات	Memories
+ملف آخر	Another file
+مشترك	Shared
+قبل لحظات	moments ago
+قبل {n} دقيقة	{n} minutes ago
+قبل {n} ساعة	{n} hours ago
+قبل {n} يوم	{n} days ago
+محفوظ	Saved
+غير موجود	Missing
+كل البنود سليمة	All checks passed
+قناة الإرسال: تيليجرام	Delivery channel: Telegram
+قناة الإرسال: تيليجرام + البريد	Delivery channel: Telegram + email
+قناة الإرسال ليست تيليجرام	Delivery channel is not Telegram
+تيليجرام مربوط — تنبيهات الأمان تُرسل له تلقائيًا	Telegram is linked — safety alerts are sent to it automatically
+رمز البوت (Bot Token)	Bot token
+معرّف المحادثة (Chat ID)	Chat ID
+لا يوجد نطاق آمن	No safe zone
+بدون نطاق لا يوجد شيء «يخرج» منه المريض.	Without a zone there is nothing for the patient to “leave”.
+صفحة الموقع والأمان ← حدّدي موقع المنزل ونصف القطر ← «حفظ النطاق».	Location page → set the home location and radius → “Save zone”.
+صفحة الموقع والأمان ← حدّدي موقع المنزل الحقيقي ← «حفظ النطاق».	Location page → set the real home location → “Save zone”.
+النطاق الآمن «{q}» بنصف قطر {n} م	Safe zone “{q}” with a {n} m radius
+«{q}» بنصف قطر {n} م	“{q}” with a {n} m radius
+لا يوجد جهاز تتبع	No tracking device
+لا ساعة ولا جوال يرسل موقع المريض.	Neither a watch nor a phone is sending the patient's location.
+حالة الجهاز ← اربطي الساعة أو جوال المريض.	Device status → link the watch or the patient's phone.
+الجهاز «{q}» لم يرسل أي موقع	Device “{q}” hasn't sent any location
+تأكدي أن تطبيق الساعة/صفحة الجوال مفتوحة ومسموح لها بالموقع.	Make sure the watch app / phone page is open and allowed to use location.
+آخر موقع من «{q}»	Last location from “{q}”
+آخر موقع من «{q}» (محاكاة)	Last location from “{q}” (simulated)
+آخر موقع داخل النطاق الآمن	Last location is inside the safe zone
+يبعد {n} م عن مركز البيت (النطاق {n} م).	{n} m from the home center (zone {n} m).
+يبعد {n} م عن مركز البيت.	{n} m from the home center.
+المريض خارج النطاق لكن دقة GPS ضعيفة	The patient is outside the zone but GPS accuracy is weak
+انتظري حتى يبتعد أكثر أو تتحسن الإشارة (خارج المباني)، أو صغّري نصف قطر النطاق.	Wait until he is farther away or the signal improves (outdoors), or reduce the zone radius.
+آخر موقع خارج النطاق (خروج مؤكد)	Last location is outside the zone (confirmed exit)
+مركز النطاق الآمن بعيد جدًا عن المريض	The safe-zone center is very far from the patient
+مركز «{q}» يبعد {n} كم عن آخر موقع — غالبًا ما زال على الموقع الافتراضي.	The center of “{q}” is {n} km from the last location — it is probably still at the default location.
+لم يُسجَّل أي خروج من النطاق	No exit from the zone has been recorded
+التطبيق لم يرصد خروجًا بعد — راجعي بنود النطاق والموقع أعلاه.	The app hasn't detected an exit yet — review the zone and location items above.
+للتجربة: صفحة الموقع والأمان ← «محاكاة الخروج من المنزل».	To test: Location page → “Simulate leaving home”.
+آخر خروج مسجّل	Last recorded exit
+لم تُرسل رسالة لهذا الخروج	No message was sent for this exit
+سُجّل التنبيه لكن لم تُجرَّب أي رسالة له.	The alert was recorded but no message was attempted.
+أعيدي تشغيل البرنامج ثم جرّبي «محاكاة الخروج» مرة أخرى.	Restart the program, then try “Simulate leaving home” again.
+وصلت رسالة الخروج إلى تيليجرام ✓	The exit message reached Telegram ✓
+حاول التطبيق الإرسال لكن فشل	The app tried to send but failed
+آخر محاولة إرسال (أي تنبيه) فشلت	The last delivery attempt (any alert) failed
+الرابط العام للموقع المباشر	Public live-location link
+غير جاهز — الرسالة ستحمل رابط خرائط جوجل بدلًا منه	Not ready — the message will carry a Google Maps link instead
+للرابط المباشر شغّلي run_public_windows.bat مع اتصال إنترنت.	For the live link, run run_public_windows.bat with an internet connection.
+نسخة العرض المحاكية	Simulated demo version
+سؤال: «{q}» — أنتظر رد المريض… سأجيب بعد {n} ثانية إن لم يرد.	Question: “{q}” — waiting for the patient… I'll answer in {n} seconds if he doesn't.
+سؤال: «{q}» — أنتظر ردك… سأجيب بعد {n} ثانية إن لم ترد.	Question: “{q}” — waiting for you… I'll answer in {n} seconds if you don't.
+✔ تم ربط «{q}». خلال ثوانٍ تبدأ صفحة الجوال بإرسال الموقع — اسمحي بالموقع على جوال المريض إذا طلب.	✔ “{q}” linked. Within seconds the phone page starts sending its location — allow location on the patient's phone if asked.
+✔ تم إنشاء تنبيه: «{q}»	✔ Alert created: “{q}”
+صالح {n} دقيقة ولمرة واحدة.	Valid for {n} minutes, single use.
+اكتمال الملف {n}%	Profile {n}% complete
+الكاميرا رأت {w} قريبًا جدًا من «{q}» أو يمسكه — شيء مسجّل كخطر.	The camera saw {w} very close to or holding “{q}” — an item registered as dangerous.
+الكاميرا رأت {w} يلمس/يتناول «{q}» وهو مسجّل ضمن الأشياء التي يتحسس منها ({w}).	The camera saw {w} touching/eating “{q}”, which is on his allergy list ({w}).
+الذكاء الاصطناعي رأى {w} يلمس/يتناول «{q}» وهو من الأشياء التي يتحسس منها.	AI saw {w} touching/eating “{q}”, which is on his allergy list.
+اتصال القلادة · بطارية {n}%	Necklace connection · battery {n}%
+آخر نقطة: {n}, {n} · عدد النقاط: {n} · داخل النطاق ✅	Last point: {n}, {n} · points: {n} · inside the zone ✅
+آخر نقطة: {n}, {n} · عدد النقاط: {n} · خارج النطاق ⚠️	Last point: {n}, {n} · points: {n} · outside the zone ⚠️
+آخر تحديث: {n} {n} · دقة GPS: ±{n} م	Last update: {n} {n} · GPS accuracy: ±{n} m
+{q} — {n} م	{q} — {n} m
+المنزل — {n} م	Home — {n} m
+آخر موقع قبل {n} دقيقة. الموقع حديث لكنه ليس بثًّا مباشرًا.	Last location {n} minutes ago. The location is recent but not a live stream.
+آخر موقع معروف من قبل {n} دقيقة. الموقع الحالي غير متاح — هذا لا يعني أنه في خطر.	Last known location from {n} minutes ago. The current location is unavailable — this does not mean he is in danger.
+الوجوه: {w} · المسجّلون: {n} · كاشف الأشياء: {w} · الذكاء الاصطناعي: غير مفعّل	Faces: {w} · registered: {n} · object detector: {w} · AI: not enabled
+الوجوه: غير متوفرة · المسجّلون: {n} · كاشف الأشياء: جاهز · الذكاء الاصطناعي: غير مفعّل	Faces: not available · registered: {n} · object detector: ready · AI: not enabled

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8">
+<script src="/static/i18n.js"></script><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECHOES — مركز الأمان</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+  <div class="demo-badge" id="demo-badge" hidden>وضع العرض التجريبي — البيانات وهمية</div>
+  <div id="app"></div>
+<script src="/static/shell.js"></script>
+<script>
+requireAuth().then(async () => {
+document.getElementById('app').innerHTML = shell("emergency", "مركز الأمان والطوارئ", "التنبيهات ومقدمو الرعاية للاتصال");
+const page = document.getElementById('page');
+
+const KIND_AR = {
+  exited_safe_zone: 'خروج من المنزل',
+  help_requested: 'طلب استغاثة',
+  stale_location: 'انقطاع تحديث الموقع',
+  no_recent_location: 'لا يوجد موقع',
+  device_offline: 'انقطاع اتصال',
+  allergen_contact: 'لمس/تناول شيء يتحسس منه',
+  danger_contact: 'يمسك شيئًا خطيرًا',
+  danger_action: 'تصرف خطير',
+};
+
+async function load() {
+  const [al, cg, where] = await Promise.all([
+    jget('/api/alerts?limit=30'),
+    jget('/api/caregivers'),
+    jget('/api/family/where?device_id=1'),
+  ]);
+
+  page.innerHTML = `
+    <div class="card">
+      <h2>حالة المريض</h2>
+      <p>${esc(where.answer || '')}</p>
+      <div class="row"><a class="btn ghost" href="/safety">عرض الخريطة</a></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>مقدمو الرعاية للاتصال</h2>
+      <ul class="list">
+        ${cg.caregivers.length ? cg.caregivers.map(c => `
+          <li><span><strong>${esc(c.full_name)}</strong> ${esc(c.relation||'')}</span>
+              <span class="muted">${esc(c.phone || c.emergency_contact || '')}</span></li>`).join('')
+          : '<li class="muted">لا يوجد مقدمو رعاية</li>'}
+      </ul>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0">التنبيهات</h2>
+        <button class="btn ghost sm" id="refresh">تحديث</button>
+      </div>
+      <ul class="list" id="alerts"></ul>
+    </div>
+  `;
+
+  const ul = document.getElementById('alerts');
+  if (!al.alerts.length) ul.appendChild(el('<li class="muted">لا توجد تنبيهات</li>'));
+  for (const a of al.alerts) {
+    const li = el(`
+      <li>
+        <div>
+          <strong>${esc(KIND_AR[a.kind] || a.kind)}</strong>
+          <div class="muted small">${esc(a.message)}</div>
+          <div class="muted small">${esc(a.created_at)}</div>
+        </div>
+        <div class="row">
+          <button class="btn ghost sm" data-share="${a.id}">مشاركة</button>
+          ${a.read_at ? '<span class="tag ok">مغلق</span>'
+                      : `<button class="btn sm" data-id="${a.id}">تأكيد وإغلاق</button>`}
+        </div>
+      </li>`);
+    const b = li.querySelector('button');
+    if (b) b.onclick = async () => { await jsend('/api/alerts/' + a.id + '/read', 'PUT'); load(); };
+    ul.appendChild(li);
+  }
+  page.querySelectorAll('button[data-share]').forEach(b => {
+    b.onclick = async () => {
+      const d = await jget(`/api/alerts/${b.dataset.share}/share`);
+      const box = el(`<div class="answer-box" style="margin-top:8px">
+        <div class="muted small">الرسالة:</div>
+        <pre style="white-space:pre-wrap;direction:rtl;text-align:right;margin:6px 0">${esc(d.text)}</pre>
+        <div class="row" id="sharerow"></div>
+        <p class="muted small">هذه الروابط تفتح تطبيق الهاتف وتجهّز الرسالة — لا تُرسل تلقائيًا.</p>
+      </div>`);
+      const row = box.querySelector('#sharerow');
+      if (!d.links.length) {
+        row.innerHTML = '<span class="muted small">لا توجد أرقام مسجّلة. أضيفيها من الإعدادات.</span>';
+      } else {
+        for (const l of d.links) {
+          const a = document.createElement('a');
+          a.className = 'btn sm';
+          a.href = l.link;
+          a.textContent = `${l.label} — ${l.contact}`;
+          row.appendChild(a);
+        }
+      }
+      b.closest('li').appendChild(box);
+    };
+  });
+
+  document.getElementById('refresh').onclick = load;
+}
+
+  const h = await jget('/health');
+  if (h.demo_mode) document.getElementById('demo-badge').hidden = false;
+  load();
+});
+</script>
+</body></html>

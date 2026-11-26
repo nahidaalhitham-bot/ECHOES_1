@@ -1,0 +1,47 @@
+# ECHOES on Render — two separate, fixed links:
+#   echoes          → caregiver app (dashboard, sign-in)   https://<name>.onrender.com
+#   echoes-patient  → patient app only (patient screen)    https://<name>-patient.onrender.com
+# Fill the values marked sync:false in Render when it asks (owner email/password, bot token).
+services:
+  - type: web
+    name: echoes
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: ECHOES_CLOUD
+        value: "1"
+      - key: ECHOES_AUTO_TUNNEL
+        value: "0"
+      - key: ECHEOS_SECRET_KEY
+        generateValue: true
+      - key: ECHOES_OWNER_EMAIL
+        sync: false
+      - key: ECHOES_OWNER_PASSWORD
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ECHOES_PATIENT_URL
+        fromService:
+          type: web
+          name: echoes-patient
+          property: host
+  - type: web
+    name: echoes-patient
+    runtime: python
+    plan: free
+    buildCommand: pip install fastapi httpx "uvicorn[standard]"
+    startCommand: uvicorn app.patient_proxy:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: MAIN_URL
+        fromService:
+          type: web
+          name: echoes
+          property: host

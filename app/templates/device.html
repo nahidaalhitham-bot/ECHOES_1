@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8">
+<script src="/static/i18n.js"></script><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECHOES — حالة الجهاز</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+  <div class="demo-badge" id="demo-badge" hidden>وضع العرض التجريبي — البيانات وهمية</div>
+  <div id="app"></div>
+<script src="/static/shell.js"></script>
+<script src="/static/jsqr.js"></script>
+<script>
+requireAuth().then(async () => {
+document.getElementById('app').innerHTML = shell("device", "حالة الجهاز", "القلادة والمحاكي — ما يعمل وما هو محاكى");
+const page = document.getElementById('page');
+
+async function load() {
+  const d = await jget('/api/devices');
+  const loc = await jget('/api/location/latest?device_id=1');
+  page.innerHTML = `
+    <div class="grid c2">
+      ${d.devices.map(dev => `
+        <div class="card">
+          <h2>${esc(dev.name)}</h2>
+          <ul class="list">
+            <li><span>حالة الاتصال</span>
+              <span class="tag ${dev.connected ? 'ok' : 'danger'}">${dev.connected ? 'متصل' : 'غير متصل'}</span></li>
+            <li><span>مستوى البطارية</span>
+              <span class="tag ${dev.battery == null ? 'warn' : 'ok'}">${dev.battery == null ? 'غير متوفر' : dev.battery + '%'}</span></li>
+            <li><span>آخر مزامنة</span><span class="muted small">${esc(dev.last_seen_at)}</span></li>
+            <li><span>مصدر البيانات</span>
+              <span class="tag ${dev.simulated ? 'warn' : 'ok'}">${dev.simulated ? 'محاكى' : 'حقيقي'}</span></li>
+          </ul>
+        </div>`).join('')}
+      <div class="card">
+        <h2>آخر موقع</h2>
+        ${loc.location
+          ? `<p>${loc.location.lat.toFixed(5)}, ${loc.location.lon.toFixed(5)}</p>
+             <p class="muted small">${esc(loc.location.freshness_note)}</p>`
+          : '<p class="muted">لا يوجد موقع مسجّل</p>'}
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>شفافية التشغيل</h2>
+      <ul class="list">
+        <li><span>ذاكرة المريض والشبكة</span><span class="tag ok">مكتمل</span></li>
+        <li><span>التعرف على الوجوه</span><span class="tag ok">مكتمل (محلي)</span></li>
+        <li><span>الموقع والنطاقات والتنبيهات</span><span class="tag ok">مكتمل</span></li>
+        <li><span>المواعيد وجلسات المراجعة</span><span class="tag ok">مكتمل</span></li>
+        <li><span>استقبال GPS من جهاز حقيقي</span><span class="tag ok">مكتمل (يحتاج جهازًا)</span></li>
+        <li><span>إشعارات تيليجرام</span><span class="tag ok">مكتمل (يحتاج رمز بوت)</span></li>
+        <li><span>اكتشاف السقوط</span><span class="tag warn">بانتظار مستشعر الساعة</span></li>
+        <li><span>واتساب</span><span class="tag warn">غير مبني</span></li>
+        <li><span>الصوت الخارجي TTS</span><span class="tag warn">غير مبني</span></li>
+      </ul>
+    </div>
+
+    <div class="card" id="patappcard" style="margin-top:14px;border:2px solid #3b1d5c">
+      <h2>📲 تطبيق المريض — رابط منفصل</h2>
+      <p class="muted small">هذا الرابط لجوال المريض فقط: يفتح شاشة المريض (المساعد الصوتي) ولا يمكن منه الدخول إلى لوحة المسؤول. امسحيه بكاميرا جوال المريض أو أرسليه له. لوحة المسؤول لها رابطها الخاص بتسجيل الدخول.</p>
+      <div id="patappbox" class="muted small">جارٍ التجهيز…</div>
+      <button class="btn ghost sm" id="patappnew" style="margin-top:8px">🔄 رابط جديد للمريض</button>
+    </div>
+
+    <div class="card" id="watchcard" style="margin-top:14px;border:2px solid #7628b8">
+      <h2>⌚ ربط ساعة المريض (Wear OS)</h2>
+      <p class="muted small">افتحي تطبيق ECHOES على الساعة — يظهر عليها رمز QR. اضغطي «مسح QR الساعة» ووجّهي كاميرا الجوال أو اللابتوب نحو الساعة، وتنربط وحدها خلال ثوانٍ وتصير هي موقع المريض. الساعة ترسل موقعها في الخلفية، وفيها زر «أحتاج مساعدة».</p>
+      <div class="row" style="flex-wrap:wrap;gap:8px">
+        <button class="btn" id="watchscan">📷 مسح QR الساعة</button>
+        <button class="btn ghost" id="watchlink">أو رمز يُكتب في الساعة</button>
+      </div>
+      <div id="scanwrap" style="display:none;margin-top:12px;text-align:center">
+        <video id="scanvideo" playsinline muted style="width:100%;max-width:360px;border-radius:14px;background:#000"></video>
+        <canvas id="scancanvas" style="display:none"></canvas>
+        <div class="muted small" id="scanmsg">وجّهي الكاميرا نحو شاشة الساعة…</div>
+        <button class="btn ghost sm" id="scanstop" style="margin-top:6px">إلغاء</button>
+      </div>
+      <div id="watchbox" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card" id="phonecard" style="margin-top:14px;border:2px solid #b88ce0">
+      <h2>📱 ربط جوال المريض كتراكر</h2>
+      <ol class="small" style="padding-inline-start:18px;margin:0 0 10px">
+        <li>على جوال المريض افتحي <b>شاشة المريض</b> في التطبيق: <b class="mono" id="pairurl" style="direction:ltr;display:inline-block">…</b> — يظهر في أعلاها رمز QR.</li>
+        <li>اضغطي الزر هنا ووجّهي الكاميرا لشاشة جوال المريض. يرتبط فورًا ويبدأ بإرسال الموقع.</li>
+      </ol>
+      <div class="row" style="flex-wrap:wrap;gap:8px;align-items:center">
+        <button class="btn" id="phonescan">📷 مسح QR جوال المريض</button>
+        <input id="phonecode" placeholder="أو اكتبي الرمز (مثل ABCD-EFGH)" style="direction:ltr;padding:9px;border-radius:10px;border:1px solid var(--line);min-width:200px">
+        <button class="btn ghost sm" id="phonecodego">ربط</button>
+      </div>
+      <details style="margin-top:12px"><summary class="small">طريقة بديلة: رابط/رمز يُفتح من جوال المريض</summary>
+      <p class="muted small">امسحي رمز QR التالي بكاميرا جوال المريض واسمحي بالموقع. لا يحتاج تسجيل دخول على الجوال، ويبقى مربوطًا حتى لو أُغلقت الصفحة وفُتحت من جديد. الرمز ثابت ولا يتغير إلا إذا ضغطتِ «رمز جديد».</p>
+      <button class="btn ghost sm" id="phonelink">🔄 رمز جديد</button>
+      <div id="phonebox2" style="margin-top:12px"></div>
+      </details>
+      <div id="phonebox" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>ربط جهاز GPS حقيقي</h2>
+      <p class="muted small">أضيفي جهازًا، وستحصلين على رمز مرة واحدة تكتبينه في الجهاز.</p>
+      <div class="row">
+        <input id="devname" placeholder="اسم الجهاز (مثال: ساعة محمد)" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--line)">
+        <button class="btn" id="pair">إضافة جهاز</button>
+      </div>
+      <div id="tokenbox" class="answer-box hidden"></div>
+      <p class="muted small" style="margin-top:12px">كيف يرسل الجهاز موقعه:</p>
+      <pre class="muted small" style="background:#f4f3fa;padding:10px;border-radius:8px;overflow-x:auto;direction:ltr;text-align:left">POST /api/device/report
+Authorization: Bearer &lt;TOKEN&gt;
+Content-Type: application/json
+
+{"lat": 24.7136, "lon": 46.6753, "accuracy_m": 10, "battery": 80}</pre>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <a class="btn ghost" href="/safety">صفحة الموقع</a>
+    </div>
+  `;
+
+  // show the one-step linking card first
+  (() => { const pc = document.getElementById('phonecard');
+           if (pc && pc.parentNode.firstElementChild !== pc) {
+             pc.parentNode.insertBefore(pc, pc.parentNode.firstElementChild);
+             pc.style.marginTop = '0'; pc.style.marginBottom = '14px'; } })();
+
+  (() => { const wc = document.getElementById('watchcard');
+           if (wc && wc.parentNode.firstElementChild !== wc) {
+             wc.parentNode.insertBefore(wc, wc.parentNode.firstElementChild);
+             wc.style.marginTop = '0'; wc.style.marginBottom = '14px'; } })();
+
+  (() => { const pa = document.getElementById('patappcard');
+           if (pa && pa.parentNode.firstElementChild !== pa) {
+             pa.parentNode.insertBefore(pa, pa.parentNode.firstElementChild);
+             pa.style.marginTop = '0'; pa.style.marginBottom = '14px'; } })();
+
+  // ---- scan the QR shown on the watch ----
+  let scanStream = null, scanTimer = null;
+  function stopScan() {
+    if (scanTimer) clearInterval(scanTimer);
+    if (scanStream) scanStream.getTracks().forEach(t => t.stop());
+    scanStream = null; scanTimer = null;
+    document.getElementById('scanwrap').style.display = 'none';
+  }
+  document.getElementById('scanstop').onclick = stopScan;
+  const startScan = async (target) => {
+    const wrap = document.getElementById('scanwrap'), video = document.getElementById('scanvideo');
+    const msg = document.getElementById('scanmsg'), box = document.getElementById(target);
+    box.parentNode.insertBefore(wrap, box);
+    msg.textContent = target === 'phonebox' ? 'وجّهي الكاميرا نحو شاشة جوال المريض…' : 'وجّهي الكاميرا نحو شاشة الساعة…';
+    box.innerHTML = '';
+    wrap.style.display = 'block';
+    try {
+      scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    } catch (e) {
+      msg.textContent = 'تعذّر فتح الكاميرا: اسمحي للمتصفح بالكاميرا (من الجوال افتحي التطبيق عبر الرابط العام https).';
+      return;
+    }
+    video.srcObject = scanStream; await video.play().catch(() => {});
+    const canvas = document.getElementById('scancanvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const detector = ('BarcodeDetector' in window) ? new BarcodeDetector({ formats: ['qr_code'] }) : null;
+    let busy = false;
+    scanTimer = setInterval(async () => {
+      if (busy || !video.videoWidth) return;
+      busy = true;
+      let text = null;
+      try {
+        if (detector) {
+          const codes = await detector.detect(video);
+          if (codes.length) text = codes[0].rawValue;
+        }
+        if (!text && window.jsQR) {
+          canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0);
+          const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const r = jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
+          if (r) text = r.data;
+        }
+      } catch (e) {}
+      if (text && /^ECHOES-PHONE:/i.test(text)) {
+        stopScan();
+        await claimPhone(text, box);
+      } else if (text && /^ECHOES:/i.test(text)) {
+        stopScan();
+        box.innerHTML = '<p class="muted small">تم قراءة رمز الساعة — جارٍ الربط…</p>';
+        try {
+          const r = await fetch('/api/devices/watch-scan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ qr: text }) });
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.detail || 'فشل');
+          if (!d.public) {
+            box.innerHTML = `<div class="answer-box warn">الرابط العام غير جاهز بعد. شغّلي <b>run_public_windows.bat</b> مع اتصال إنترنت ثم امسحي مرة ثانية.</div>`;
+          } else {
+            box.innerHTML = `<div class="answer-box ok">✔ تم إرسال الربط للساعة. خلال ثوانٍ تظهر عليها «تم الربط» وتطلب إذن الموقع — اضغطي «سماح».
+              ${d.delivered ? '' : '<br>⚠️ تعذّر الوصول لخدمة ntfy.sh — تحققي من الإنترنت ثم امسحي مرة ثانية.'}</div>`;
+            setTimeout(load, 15000);
+          }
+        } catch (e) {
+          box.innerHTML = '<div class="answer-box warn">تعذّر الربط: ' + esc(e.message) + '</div>';
+        }
+      } else if (text) {
+        msg.textContent = 'هذا ليس رمز ECHOES — افتحي صفحة التراكر على جوال المريض أو تطبيق الساعة.';
+      }
+      busy = false;
+    }, 350);
+  };
+  document.getElementById('watchscan').onclick = () => startScan('watchbox');
+  const renderPatApp = async (fresh) => {
+    const box = document.getElementById('patappbox'); if (!box) return;
+    try {
+      const r = await fetch('/api/patient-link' + (fresh ? '?new=1' : ''), { method: 'POST' });
+      const d = await r.json(); if (!r.ok) throw new Error(d.detail || 'فشل');
+      if (!d.public) {
+        box.innerHTML = '<div class="answer-box warn">الرابط العام غير جاهز — شغّلي الخيار 1 من أيقونة ECHOES. على هذا الكمبيوتر: <a href="' + esc(d.local) + '">' + 'شاشة المريض' + '</a></div>';
+        return;
+      }
+      box.innerHTML = '<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">' +
+        '<div style="background:#fff;padding:8px;border-radius:12px;line-height:0">' + (d.qr_svg || '') + '</div>' +
+        '<div style="flex:1;min-width:220px"><p class="small" style="margin:0 0 6px">امسحي الرمز بكاميرا جوال المريض، أو أرسلي له الرابط:</p>' +
+        '<input readonly value="' + esc(d.url) + '" style="width:100%;direction:ltr;padding:8px;border-radius:8px;border:1px solid var(--line)" onclick="this.select()">' +
+        '<p class="muted small">«رابط جديد للمريض» يوقف الرابط القديم على كل الأجهزة.</p></div></div>';
+    } catch (e) { box.textContent = 'تعذّر: ' + e.message; }
+  };
+  document.getElementById('patappnew').onclick = () => {
+    if (confirm('الرابط الجديد سيوقف تطبيق المريض على الجوال الحالي حتى يُفتح الرابط الجديد. متأكدة؟')) renderPatApp(true);
+  };
+  renderPatApp(false);
+
+  async function claimPhone(text, box) {
+    box.innerHTML = '<p class="muted small">جارٍ ربط جوال المريض…</p>';
+    try {
+      const r = await fetch('/api/devices/phone-scan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ qr: text }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || 'فشل');
+      box.innerHTML = '<div class="answer-box ok">✔ تم ربط «' + esc(d.name) + '». خلال ثوانٍ تبدأ صفحة الجوال بإرسال الموقع — اسمحي بالموقع على جوال المريض إذا طلب.</div>';
+      setTimeout(load, 12000);
+    } catch (e) {
+      box.innerHTML = '<div class="answer-box warn">تعذّر الربط: ' + esc(e.message) + '</div>';
+    }
+  }
+  document.getElementById('phonescan').onclick = () => startScan('phonebox');
+  document.getElementById('phonecodego').onclick = () => {
+    const v = document.getElementById('phonecode').value.trim();
+    if (v) claimPhone(v, document.getElementById('phonebox'));
+  };
+
+
+  document.getElementById('watchlink').onclick = async (ev) => {
+    const box = document.getElementById('watchbox');
+    ev.target.disabled = true;
+    box.innerHTML = '<p class="muted small">جارٍ تجهيز الرمز… (قد يستغرق حتى 20 ثانية)</p>';
+    try {
+      const r = await fetch('/api/devices/watch-code', { method: 'POST' });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || 'فشل');
+      if (!d.public) {
+        box.innerHTML = `<div class="answer-box warn">الرابط العام غير جاهز بعد، والساعة تحتاجه لتتصل بالتطبيق من أي مكان.
+          شغّلي <b>run_public_windows.bat</b> (أو نسخة العرض العامة) مع اتصال إنترنت ثم اضغطي مرة ثانية.</div>`;
+      } else {
+        const c = d.code;
+        box.innerHTML = `<div style="text-align:center;padding:10px">
+            <div class="muted small">اكتبي هذا الرمز في تطبيق ECHOES على الساعة</div>
+            <div style="font:800 46px/1.2 monospace;letter-spacing:10px;direction:ltr;margin:8px 0;color:#3b1d5c">${esc(c.slice(0,3))}-${esc(c.slice(3))}</div>
+            <div class="muted small">صالح ${d.minutes} دقيقة ولمرة واحدة. ${d.published ? '' : '⚠️ تعذّر نشر الرابط على ntfy.sh — تحققي من الإنترنت.'}</div>
+          </div>`;
+      }
+    } catch (e) {
+      box.innerHTML = '<div class="answer-box warn">تعذّر إنشاء الرمز: ' + esc(e.message) + '</div>';
+    }
+    ev.target.disabled = false;
+  };
+
+  const renderPhone = async (fresh) => {
+    const box = document.getElementById('phonebox2');
+    const btn = document.getElementById('phonelink');
+    const pu = document.getElementById('pairurl');
+    if (!box) return;
+    if (!fresh && window.__phoneLink) { box.innerHTML = window.__phoneLink; if (pu) pu.textContent = window.__pairUrl; return; }
+    btn.disabled = true;
+    box.innerHTML = '<p class="muted small">جارٍ تجهيز الرابط العام والرمز… (قد يستغرق حتى 20 ثانية)</p>';
+    try {
+      const r = await fetch('/api/devices/phone-link' + (fresh ? '?new=1' : ''), { method: 'POST' });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || 'فشل');
+      window.__pairUrl = d.url ? 'رابط «تطبيق المريض» أعلاه' : 'الرابط العام غير جاهز — شغّلي الخيار 1 من أيقونة ECHOES';
+      if (pu) pu.textContent = window.__pairUrl;
+      if (!d.public) {
+        box.innerHTML = `<div class="answer-box warn">الرابط العام غير جاهز بعد، والجوال يحتاج رابط https ليقرأ الموقع.
+          شغّلي التطبيق من <b>run_public_windows.bat</b> (أو نسخة العرض العامة) مع اتصال إنترنت، ثم حدّثي الصفحة.
+          <div class="muted small" style="margin-top:6px">${esc((d.tunnel && d.tunnel.detail) || '')}</div></div>`;
+      } else {
+        box.innerHTML = `<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+          <div style="background:#fff;padding:8px;border-radius:12px;line-height:0">${d.qr_svg || ''}</div>
+          <div style="flex:1;min-width:220px">
+            <ol class="small" style="padding-inline-start:18px;margin:0 0 8px">
+              <li>افتحي الكاميرا في جوال المريض ووجّهيها للرمز.</li>
+              <li>افتحي الرابط واسمحي بالموقع.</li>
+              <li>اتركي الصفحة مفتوحة — يظهر «جوال المريض» هنا متصلًا.</li>
+            </ol>
+            <p class="muted small">أو أرسلي هذا الرابط للجوال (لا تشاركيه مع غيرك):</p>
+            <input readonly value="${esc(d.url)}" style="width:100%;direction:ltr;padding:8px;border-radius:8px;border:1px solid var(--line)" onclick="this.select()">
+            <p class="muted small">«رمز جديد» يلغي ربط الجوال السابق.</p>
+          </div></div>`;
+        window.__phoneLink = box.innerHTML;
+      }
+    } catch (e) {
+      box.innerHTML = '<div class="answer-box warn">تعذّر إنشاء الرمز: ' + esc(e.message) + '</div>';
+    }
+    btn.disabled = false;
+  };
+  document.getElementById('phonelink').onclick = () => {
+    if (confirm('رمز جديد سيلغي ربط الجوال الحالي. متأكدة؟')) renderPhone(true);
+  };
+  renderPhone(false);
+
+
+  document.getElementById('pair').onclick = async () => {
+    const name = document.getElementById('devname').value.trim();
+    if (!name) { alert('اكتبي اسم الجهاز'); return; }
+    const r = await fetch('/api/devices/pair', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, kind:'wearable'})
+    });
+    const d = await r.json();
+    const box = document.getElementById('tokenbox');
+    box.classList.remove('hidden');
+    if (!r.ok) { box.className='answer-box warn'; box.textContent = d.detail || 'فشل'; return; }
+    box.className = 'answer-box ok';
+    // Remember the token across the re-render that load() triggers.
+    window.__newToken = d.token;
+    load();
+  };
+  const tk = window.__newToken;
+  if (tk) {
+    const box = document.getElementById('tokenbox');
+    if (box) {
+      box.classList.remove('hidden');
+      box.className = 'answer-box ok';
+      box.innerHTML = `<strong>رمز الجهاز (يُعرض مرة واحدة):</strong>
+        <pre style="direction:ltr;text-align:left;overflow-x:auto;margin:8px 0">${esc(tk)}</pre>
+        <span class="muted small">احفظيه الآن — لن يظهر مرة أخرى.</span>`;
+    }
+  }
+
+
+}
+
+  load();
+});
+</script>
+</body></html>

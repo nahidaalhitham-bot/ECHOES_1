@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<script src="/static/i18n.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECHOES — ملف المريض</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="demo-badge" id="demo-badge" hidden>وضع العرض التجريبي — البيانات وهمية</div>
+  <div id="app"></div>
+<script src="/static/shell.js"></script>
+<script>
+requireAuth().then(async () => {
+document.getElementById('app').innerHTML = shell("profile", "ملف المريض", "كل الحقول قابلة للتعديل — بدون تعديل الكود");
+const page = document.getElementById('page');
+
+const FIELDS = [
+  ["full_name", "الاسم الكامل", "text"],
+  ["age", "العمر", "number"],
+  ["home_address", "عنوان المنزل", "text"],
+  ["medical_info", "المعلومات الطبية", "textarea"],
+  ["allergies", "الحساسية", "textarea"],
+  ["emergency_notes", "ملاحظات الطوارئ", "textarea"],
+  ["important_info", "معلومات شخصية مهمة", "textarea"],
+  ["routine", "العادات والروتين اليومي", "textarea"],
+  ["preferences", "التفضيلات الشخصية", "textarea"],
+  ["memories", "الذكريات المهمة والأشخاص المقربون", "textarea"],
+];
+
+async function load() {
+  const p = await jget('/api/patient');
+  page.innerHTML = `
+    <div class="card">
+      <h2>صورة المريض</h2>
+      <div class="row">
+        <img id="pphoto" alt="" style="width:110px;height:110px;object-fit:cover;border-radius:14px;border:1px solid var(--line);display:none">
+        <div>
+          <input type="file" id="pfile" accept="image/*">
+          <p class="muted small">JPG أو PNG، حتى ٨ ميجابايت.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="completion-card" style="margin-top:14px;background:#fbfaff">
+      <h2>اكتمال الملف</h2>
+      <div id="completion">…</div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>معلومات المريض</h2>
+      <div id="fields"></div>
+      <div class="field"><label>التذكيرات التلقائية والمواعيد</label><p class="muted small">أضف كل تذكير بموعده ونوعه. أمثلة: الصلاة، الدواء، عزيمة، عرس، موعد طبي، زيارة عائلية.</p>
+        <div class="row" style="flex-wrap:wrap"><select id="rem_type"><option value="prayer">وقت صلاة</option><option value="medication">دواء</option><option value="event">عزيمة / عرس / مناسبة</option><option value="appointment">موعد طبي</option><option value="routine">روتين يومي</option><option value="custom">تذكير آخر</option></select><input id="rem_title" placeholder="اسم التذكير" style="flex:1;min-width:160px"><input id="rem_date" type="date"><input id="rem_time" type="time"></div>
+        <div class="row" style="margin-top:8px"><input id="rem_notes" placeholder="تفاصيل أو تعليمات إضافية" style="flex:1"><button class="btn ghost sm" type="button" id="add_reminder">+ إضافة تذكير</button></div><div id="reminder_list" style="margin-top:10px"></div>
+      </div>
+      <div class="row">
+        <button class="btn" id="save">حفظ التغييرات</button>
+        <span id="msg" class="muted small"></span>
+      </div>
+    </div>
+  `;
+
+  let reminders = [];
+  try { const old = JSON.parse(p.reminder_scope || '[]'); reminders = Array.isArray(old) ? old : []; } catch (_) { reminders = p.reminder_scope ? [{type:'custom',title:p.reminder_scope,date:'',time:'',notes:'تذكير قديم'}] : []; }
+  function renderReminders(){ const box=document.getElementById('reminder_list'); if(!box)return; box.innerHTML=reminders.length?reminders.map((r,i)=>`<div class="card" style="padding:10px;margin:6px 0"><strong>${esc(r.title)}</strong> <span class="muted small">${esc(r.date||'يومي/غير محدد')} ${esc(r.time||'')}</span><div class="muted small">${esc(r.notes||'')}</div><button type="button" class="btn ghost sm" data-rm="${i}">حذف</button></div>`).join(''):'<span class="muted small">لا توجد تذكيرات مضافة بعد</span>'; box.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{reminders.splice(Number(b.dataset.rm),1);renderReminders();}); }
+  document.getElementById('add_reminder').onclick=()=>{ const title=document.getElementById('rem_title').value.trim(); if(!title){alert('اكتب اسم التذكير أولا');return;} reminders.push({type:document.getElementById('rem_type').value,title,date:document.getElementById('rem_date').value,time:document.getElementById('rem_time').value,notes:document.getElementById('rem_notes').value.trim()}); ['rem_title','rem_date','rem_time','rem_notes'].forEach(id=>document.getElementById(id).value=''); renderReminders(); };
+  renderReminders();
+
+  const img = document.getElementById('pphoto');
+  // `photo_path` is already in the profile payload: only request the image
+  // when a portrait exists, so a missing one is not a 404 in the console.
+  if (p.photo_path) {
+    img.src = '/api/patient/photo?t=' + Date.now();
+    img.style.display = 'block';
+  }
+
+  document.getElementById('pfile').onchange = async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const fd = new FormData();
+    fd.append('file', f);
+    const r = await fetch('/api/patient/photo', { method: 'POST', body: fd });
+    if (r.ok) {
+      img.src = '/api/patient/photo?t=' + Date.now();
+      img.style.display = 'block';
+    } else {
+      const d = await r.json().catch(() => ({}));
+      alert(d.detail || 'تعذّر رفع الصورة');
+    }
+  };
+
+  const box = document.getElementById('fields');
+  for (const [k, label, type] of FIELDS) {
+    const val = p[k] == null ? "" : p[k];
+    box.appendChild(el(`
+      <div class="field">
+        <label>${label}</label>
+        ${type === 'textarea'
+          ? `<textarea id="${k}">${esc(val)}</textarea>`
+          : `<input id="${k}" type="${type}" value="${esc(val)}">`}
+      </div>`));
+    if (k === 'memories') {
+      box.appendChild(el(`
+        <div class="card" style="margin-top:6px;margin-bottom:18px;background:#fbfaff">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <strong>صور وأصوات هذه الذكريات</strong>
+            <div class="row">
+              <label class="btn ghost sm" style="cursor:pointer">
+                + صورة
+                <input type="file" id="pmem_photo" accept="image/*" multiple style="display:none">
+              </label>
+              <label class="btn ghost sm" style="cursor:pointer">
+                + صوت
+                <input type="file" id="pmem_audio" accept="audio/*" multiple style="display:none">
+              </label>
+            </div>
+          </div>
+          <div class="field" style="margin-top:12px"><label>نوع العنصر</label><select id="pmem_category"><option value="person">شخص</option><option value="place">مكان</option><option value="object">شيء</option><option value="event">حدث</option><option value="fact" selected>معلومة / ذكرى</option><option value="other">صوت أو ملف آخر</option></select></div>
+          <div class="field"><label>عنوان الصورة أو الصوت</label><input id="pmem_title" type="text" placeholder="مثال: محمد ابن المريض"></div>
+          <div class="field"><label>الوصف: ماذا توضح الصورة أو ماذا يحتوي التسجيل؟</label><textarea id="pmem_description" rows="2" placeholder="اكتب وصفا واضحا"></textarea></div>
+          <div class="field"><label>الوظيفة أو الغرض</label><input id="pmem_function" type="text" placeholder="مثال: الابن الأكبر / جرس باب المنزل / مكان السكن"></div>
+          <div class="field"><label>يرتبط بماذا؟</label><input id="pmem_related" type="text" placeholder="اسم شخص أو مكان أو حدث مسجل"></div>
+          <p class="muted small">تُحفظ هذه البيانات مع الملف الذي تختاره الآن فقط. لإضافة ملف آخر أدخل بياناته ثم اختره.
+            <b>صورة لشيء أو مكان حقيقي في البيت (مثل الكنبة في الصالة) مع عنوانها ووصفها تجعل الكاميرا تتعرف عليه وتذكّر المريض بالذكرى المرتبطة.</b></p>
+          <div id="pmem_album" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px"></div>
+          <div id="pmem_audios" style="margin-top:10px"></div>
+        </div>`));
+    }
+  }
+
+  // ---- album under «الذكريات المهمة والأشخاص المقربون» ----
+  async function renderPatientAlbum() {
+    const ab = document.getElementById('pmem_album');
+    const au = document.getElementById('pmem_audios');
+    if (!ab || !au) return;
+    try {
+      const [ph, ad] = await Promise.all([
+        jget('/api/patient/memories/photos'),
+        jget('/api/patient/memories/audio'),
+      ]);
+      ab.innerHTML = ph.photos.length ? ph.photos.map(x => `
+        <figure style="margin:0;width:130px;position:relative">
+          <img src="/api/memory-photo/${x.id}" alt="${esc(x.label)}"
+               style="width:130px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">
+          <button class="trash" title="حذف الصورة" data-kind="photo" data-id="${x.id}"
+                  aria-label="حذف الصورة">🗑</button>
+          <figcaption class="muted small" style="text-align:right;margin-top:6px"><strong>${esc(x.title || x.label)}</strong><br>${esc(x.category_label || '')}<br>${esc(x.description || '')}<br>${x.function_text ? 'الوظيفة: '+esc(x.function_text)+'<br>' : ''}${x.related_to ? 'يرتبط بـ: '+esc(x.related_to) : ''}</figcaption>
+        </figure>`).join('') : '<span class="muted small">لا توجد صور بعد</span>';
+
+      au.innerHTML = ad.audio.length ? ad.audio.map(a => `
+        <div style="margin-bottom:8px;position:relative">
+          <div class="muted small" style="display:flex;align-items:center;gap:8px">
+            <span><strong>${esc(a.title || a.label)}</strong><br>${esc(a.category_label || '')}<br>${esc(a.description || '')}<br>${a.function_text ? 'الوظيفة: '+esc(a.function_text)+'<br>' : ''}${a.related_to ? 'يرتبط بـ: '+esc(a.related_to) : ''}</span>
+            <button class="trash inline" title="حذف الصوت" data-kind="audio" data-id="${a.id}"
+                    aria-label="حذف الصوت">🗑</button>
+          </div>
+          <audio controls src="/api/audio/${a.id}" style="width:100%;max-width:340px"></audio>
+        </div>`).join('') : '';
+
+      // Wire the trash buttons (event delegation keeps this simple).
+      document.querySelectorAll('#pmem_album .trash, #pmem_audios .trash').forEach(btn => {
+        btn.onclick = async () => {
+          const kind = btn.dataset.kind;
+          const id = btn.dataset.id;
+          const label = kind === 'photo' ? 'الصورة' : 'الصوت';
+          if (!confirm(`حذف ${label} نهائيًا؟`)) return;
+          const url = kind === 'photo' ? `/api/memory-photo/${id}` : `/api/audio/${id}`;
+          const r = await fetch(url, { method: 'DELETE' });
+          if (!r.ok && r.status !== 204) {
+            alert('تعذّر الحذف');
+            return;
+          }
+          renderPatientAlbum();
+        };
+      });
+    } catch (e) {}
+  }
+
+  const photoIn = document.getElementById('pmem_photo');
+  const audioIn = document.getElementById('pmem_audio');
+  if (photoIn) photoIn.onchange = async (e) => {
+    for (const f of e.target.files) {
+      const fd = new FormData(); fd.append('file', f); fd.append('category',document.getElementById('pmem_category').value); fd.append('title',document.getElementById('pmem_title').value); fd.append('description',document.getElementById('pmem_description').value); fd.append('function_text',document.getElementById('pmem_function').value); fd.append('related_to',document.getElementById('pmem_related').value);
+      const r = await fetch('/api/patient/memories/photos', { method: 'POST', body: fd });
+      if (!r.ok) { const d = await r.json().catch(function(){return {};}); alert(d.detail || 'تعذّر رفع الصورة'); break; }
+    }
+    e.target.value = '';
+    renderPatientAlbum();
+  };
+  if (audioIn) audioIn.onchange = async (e) => {
+    for (const f of e.target.files) {
+      const fd = new FormData(); fd.append('file', f); fd.append('category',document.getElementById('pmem_category').value); fd.append('title',document.getElementById('pmem_title').value); fd.append('description',document.getElementById('pmem_description').value); fd.append('function_text',document.getElementById('pmem_function').value); fd.append('related_to',document.getElementById('pmem_related').value);
+      const r = await fetch('/api/patient/memories/audio', { method: 'POST', body: fd });
+      if (!r.ok) { const d = await r.json().catch(function(){return {};}); alert(d.detail || 'تعذّر رفع الصوت'); break; }
+    }
+    e.target.value = '';
+    renderPatientAlbum();
+  };
+
+  renderPatientAlbum();
+
+  // ---- extended personal fields ----
+  const EXTRA = [
+    ["nickname", "الاسم المفضل (الكنية)"],
+    ["date_of_birth", "تاريخ الميلاد", "text", "1952-03-10"],
+    ["gender", "الجنس"],
+    ["dialect", "اللهجة المفضلة", "text", "سعودي"],
+    ["phone", "رقم الهاتف"],
+    ["birthplace", "مكان الولادة"],
+    ["childhood", "ذكريات الطفولة", "textarea"],
+    ["occupation", "المهنة السابقة"],
+    ["education", "التعليم"],
+    ["life_events", "أحداث الحياة المهمة", "textarea"],
+    ["hobbies", "الهوايات"],
+    ["favourite_activities", "الأنشطة المفضلة"],
+    ["favourite_foods", "الأطعمة المفضلة"],
+    ["favourite_drinks", "المشروبات المفضلة"],
+    ["favourite_music", "الموسيقى المفضلة"],
+    ["favourite_places", "الأماكن المفضلة"],
+    ["favourite_topics", "مواضيع الحديث المفضلة"],
+    ["comfort_items", "ما يريحه", "textarea"],
+    ["confusion_triggers", "ما يسبب له الارتباك", "textarea"],
+    ["medications", "الأدوية الحالية", "textarea"],
+    ["medication_schedule", "جدول الأدوية"],
+    ["medical_instructions", "تعليمات طبية مهمة", "textarea"],
+    ["mobility", "احتياجات الحركة"],
+  ];
+
+  let extra = {};
+  try { extra = await jget('/api/patient/extra'); } catch (e) { extra = {}; }
+
+  const exBox = el('<div class="card" style="margin-top:14px"><h2>السيرة والمعلومات الشخصية</h2><div id="exfields"></div><div class="row"><button class="btn" id="saveextra">حفظ السيرة</button><span id="exmsg" class="muted small"></span></div></div>');
+  document.getElementById('page').insertBefore(exBox, document.getElementById('completion-card').nextSibling);
+
+  const exf = document.getElementById('exfields');
+  for (const [k, label, type, ph] of EXTRA) {
+    const val = extra[k] == null ? "" : extra[k];
+    exf.appendChild(el(`
+      <div class="field">
+        <label>${label}</label>
+        ${type === 'textarea'
+          ? `<textarea id="x_${k}">${esc(val)}</textarea>`
+          : `<input id="x_${k}" value="${esc(val)}" placeholder="${ph || ''}">`}
+      </div>`));
+  }
+
+  // ---- safety lists: allergies, dangerous things, private topics ----
+  const SAFETY = [
+    ["allergy_items", "🚫 الأشياء التي يتحسس منها المريض",
+     "مثال: موز، فول سوداني، حليب، قطط، عطور",
+     "إذا رأت الكاميرا المريض يلمس أو يتناول أحدها يُرسل إشعار فوري للأسرة، وتنبّهه الساعة بصوت هادئ."],
+    ["danger_items", "⚠️ أشياء أو تصرفات خطيرة",
+     "مثال: سكين، مقص، الفرن، الولاعة، الأدوية، فتح باب الشارع",
+     "السكين والمقص والفرن مضافة تلقائيًا. عند اقترابه منها أو إمساكها يُرسل إشعار فوري."],
+    ["private_topics", "🔒 مواضيع خاصة لا يجيب عنها المساعد",
+     "مثال: الورث، الخلافات العائلية، الأمور المالية",
+     "عندما يسأل شخص سؤالًا ولا يرد المريض خلال ١٣ ثانية يجيب المساعد عنه — إلا هذه المواضيع، والمعلومات الطبية والعنوان والأرقام والأموال (محجوبة دائمًا)."],
+  ];
+  const safeBox = el(`<div class="card" style="margin-top:14px;border:2px solid #f3c4c4;background:#fffafa">
+    <h2>الأمان والخصوصية — للكاميرا والمساعد</h2>
+    <div id="safefields"></div>
+    <div class="row"><button class="btn" id="savesafe">حفظ قوائم الأمان</button><span id="safemsg" class="muted small"></span></div>
+  </div>`);
+  exBox.parentNode.insertBefore(safeBox, exBox.nextSibling);
+  const sf = document.getElementById('safefields');
+  for (const [k, label, ph, help] of SAFETY) {
+    sf.appendChild(el(`<div class="field"><label>${label}</label>
+      <textarea id="x_${k}" rows="2" placeholder="${ph}">${esc(extra[k] || '')}</textarea>
+      <p class="muted small">${help} افصلي بين العناصر بفاصلة.</p></div>`));
+  }
+
+  async function saveExtraAll(msgId) {
+    const body = {};
+    for (const [k] of EXTRA) body[k] = document.getElementById('x_' + k).value;
+    for (const [k] of SAFETY) body[k] = document.getElementById('x_' + k).value;
+    body.language = extra.language || 'ar';
+    body.home_lat = extra.home_lat ?? null;
+    body.home_lon = extra.home_lon ?? null;
+    try {
+      extra = await jsend('/api/patient/extra', 'PUT', body);
+      document.getElementById(msgId).textContent = 'تم الحفظ ✔';
+      loadCompletion();
+    } catch (e) {
+      document.getElementById(msgId).textContent = 'فشل الحفظ';
+    }
+  }
+  document.getElementById('saveextra').onclick = () => saveExtraAll('exmsg');
+  document.getElementById('savesafe').onclick = () => saveExtraAll('safemsg');
+
+  async function loadCompletion() {
+    try {
+      const c = await jget('/api/patient/completion');
+      const bar = `<div style="background:#e6e3f5;border-radius:8px;height:12px;overflow:hidden;margin:8px 0">
+        <div style="height:100%;width:${c.percent}%;background:#5b4bd6"></div></div>`;
+      document.getElementById('completion').innerHTML =
+        `<strong style="font-size:20px">${c.percent}%</strong>
+         <span class="muted small">(${c.done} من ${c.total})</span>
+         ${bar}
+         ${c.missing.length
+           ? `<div class="muted small">ناقص: ${c.missing_labels.join(' · ')}</div>`
+           : '<div class="ok small">كل الحقول مكتملة ✔</div>'}`;
+    } catch (e) {}
+  }
+  loadCompletion();
+
+  document.getElementById('save').onclick = async () => {
+    const body = {};
+    for (const [k] of FIELDS) {
+      const v = document.getElementById(k).value;
+      body[k] = k === 'age' ? (v === '' ? null : Number(v)) : v;
+    }
+    body.reminder_scope = JSON.stringify(reminders);
+    body.photo_path = p.photo_path;
+    try {
+      await jsend('/api/patient', 'PUT', body);
+      document.getElementById('msg').textContent = 'تم الحفظ ✔';
+    } catch (e) {
+      document.getElementById('msg').textContent = 'فشل الحفظ: ' + e.message;
+    }
+  };
+}
+
+  const h = await jget('/health');
+  if (h.demo_mode) document.getElementById('demo-badge').hidden = false;
+  load();
+});
+</script>
+</body>
+</html>

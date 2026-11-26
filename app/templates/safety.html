@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<script src="/static/i18n.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Echeos — الأمان والموقع</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/shell.js"></script>
+</head>
+<body class="family">
+  <main class="shell wide">
+    <h1>الأمان والموقع</h1>
+    <p class="hint">لا نعرض موقعًا قديمًا على أنه مباشر. ولا نفترض الخطر عند الانقطاع.</p>
+
+    <section class="panel">
+      <h2>الخريطة المباشرة</h2>
+      <div id="map" style="height:320px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#eef0f8"></div>
+      <p class="muted small" id="maplabel" style="margin-top:8px">…</p>
+      <div class="row" style="margin-top:8px">
+        <label class="muted small"><input type="checkbox" id="autorefresh" checked style="width:auto"> تحديث تلقائي كل ٣ ثوانٍ</label>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <a class="btn" id="openmap" href="#" target="_blank" rel="noopener"
+           style="pointer-events:none;opacity:.5">افتح موقع المريض في خرائط جوجل</a>
+      </div>
+      <p class="muted small" id="mapmeta" style="margin-top:6px"></p>
+    </section>
+
+    <section class="panel">
+      <h2>رابط مباشر للعائلة</h2>
+      <p class="muted small">
+        أنشئي رابطًا مؤقتًا وأرسليه لوالدة المريض أو أخيه عبر واتساب.
+        يفتح على أي جهاز بلا حساب، ويعرض <b>الموقع فقط</b>.
+      </p>
+      <p class="small" id="pubstatus" style="margin:6px 0 10px">…</p>
+      <div class="row">
+        <select id="share-hours" style="padding:10px;border-radius:10px;border:1px solid var(--line)">
+          <option value="6">٦ ساعات</option>
+          <option value="24" selected>٢٤ ساعة</option>
+          <option value="72">٣ أيام</option>
+        </select>
+        <button class="btn" id="mklink">إنشاء رابط</button>
+      </div>
+      <div id="linkbox" class="answer-box hidden"></div>
+      <ul id="links" class="list" style="margin-top:10px"></ul>
+    </section>
+
+    <section class="panel" id="ask-panel">
+      <h2>أين هو الآن؟</h2>
+      <button id="ask-where" class="primary">اسأل</button>
+      <div id="where-answer" class="answer-box"></div>
+    </section>
+
+    <section class="panel">
+      <h2>تحديد النطاق الآمن</h2>
+      <p class="muted small">استخدمي موقعك الحالي إن كنت في منزل المريض، أو أدخلي الإحداثيات.</p>
+      <div class="row">
+        <button class="btn" id="usegeo">استخدم موقعي الحالي</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <input id="zlat" type="number" step="any" placeholder="خط العرض" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);direction:ltr">
+        <input id="zlon" type="number" step="any" placeholder="خط الطول" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);direction:ltr">
+        <input id="zrad" type="number" value="300" placeholder="نصف القطر (م)" style="width:130px;padding:10px;border-radius:10px;border:1px solid var(--line)">
+        <button class="btn" id="savezone">حفظ النطاق</button>
+      </div>
+      <p id="zonemsg" class="muted small"></p>
+      <ul id="zones" class="list" style="margin-top:10px"></ul>
+    </section>
+
+    <section class="panel">
+      <h2>حالة الجهاز</h2>
+      <div class="card" style="background:#fff8e6;border-color:#ecdba0;margin-bottom:12px">
+        <strong>أداة تجريب</strong> — تحاكي خروج المريض من المنزل لرؤية التنبيه.
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="sim-exit">محاكاة الخروج من المنزل</button>
+          <button class="btn ghost" id="diag-exit">🔍 فحص سبب عدم وصول التنبيه</button>
+        </div>
+        <div id="diag-box" style="margin-top:10px"></div>
+        <p class="muted small" id="sim-msg" style="margin-top:8px">
+          تُنشئ إحداثيات محاكاة خارج النطاق وتُطلق التنبيه تلقائيًا.
+          البيانات تُعلَّم «محاكي» ولا تُعرض كموقع حقيقي.
+        </p>
+      </div>
+      <div id="device-info" class="muted">…</div>
+      <div class="row" style="margin-top:12px">
+        <button id="check-stale">فحص انقطاع التحديث</button>
+      </div>
+      <p class="muted small">الإحداثيات تأتي من جهاز مرتبط عبر صفحة «حالة الجهاز».</p>
+    </section>
+
+    <section class="panel">
+      <h2>آخر المواقع</h2>
+      <ul id="history"></ul>
+    </section>
+
+    <section class="panel">
+      <h2>التنبيهات</h2>
+      <ul id="alerts"></ul>
+    </section>
+  </main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+let ACTIVE = 1;   // resolved from the server, never assumed
+
+async function resolveActive() {
+  try {
+    const d = await jget('/api/location/active-device');
+    if (d && d.device_id) ACTIVE = d.device_id;
+  } catch (e) {}
+}
+
+async function load() {
+  let dev, hist, al;
+  try {
+    const xs = await Promise.all([
+      jget('/api/devices'),
+      jget(`/api/location/history?device_id=${ACTIVE}&limit=5`),
+      jget('/api/alerts?limit=10'),
+    ]);
+    [dev, hist, al] = xs;
+  } catch (e) {
+    document.getElementById('device-info').textContent = 'تعذّر تحميل البيانات.';
+    return;
+  }
+  const d = dev.devices[0];
+  $('device-info').textContent = d
+    ? `${d.name} — ${d.connected ? 'متصل' : 'غير متصل'} — ${d.simulated ? 'محاكي' : 'جهاز حقيقي'}`
+    : 'لا يوجد جهاز';
+
+  $('history').innerHTML = hist.history.map(h =>
+    `<li>${h.lat.toFixed(5)}, ${h.lon.toFixed(5)}
+      <span class="tag">${h.simulated ? 'محاكي' : 'حقيقي'}</span>
+      <span class="muted small">${h.reported_at}</span></li>`).join('')
+    || '<li class="muted">لا يوجد</li>';
+
+  $('alerts').innerHTML = al.alerts.map(a =>
+    `<li><b>${({exited_safe_zone:'خرج من النطاق الآمن', help_requested:'طلب مساعدة', device_offline:'انقطاع الاتصال', stale_location:'موقع قديم', no_recent_location:'لا يوجد موقع', allergen_contact:'لمس شيء يتحسس منه', danger_contact:'يمسك شيئًا خطيرًا', danger_action:'تصرف خطير'})[a.kind] || a.kind}</b> — ${a.message}
+      <span class="muted small">${a.created_at}</span></li>`).join('')
+    || '<li class="muted">لا توجد تنبيهات</li>';
+}
+
+$('ask-where').onclick = async () => {
+  const r = await fetch(`/api/family/where?device_id=${ACTIVE}`);
+  const d = await r.json();
+  const box = $('where-answer');
+  box.textContent = d.answer || d.detail;
+  box.className = 'answer-box ' + (d.status === 'fresh' ? 'ok' : 'warn');
+};
+
+
+
+function escHtml(x) {
+  return String(x == null ? '' : x).replaceAll('&','&amp;')
+    .replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+}
+
+$('mklink').onclick = async () => {
+  const hours = Number($('share-hours').value);
+  const r = await fetch('/api/share/live', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ hours }),
+  });
+  const d = await r.json();
+  const box = $('linkbox');
+  box.classList.remove('hidden');
+  if (!r.ok) { box.className = 'answer-box warn'; box.textContent = d.detail || 'تعذّر الإنشاء'; return; }
+  const full = d.url || (location.origin + d.path);
+  box.className = 'answer-box ' + (d.url ? 'ok' : 'warn');
+  box.innerHTML = `
+    <strong>${d.url ? 'الرابط العام جاهز — أرسليه الآن:'
+      : '⚠️ رابط محلي فقط — يفتح على هذا الجهاز وحده، لا على هاتف العائلة. انتظري ظهور الرابط العام ثم أعيدي الإنشاء.'}</strong>
+    <input id="liveurl" readonly value="${escHtml(full)}"
+           style="width:100%;margin:8px 0;padding:10px;border-radius:8px;border:1px solid var(--line);direction:ltr;text-align:left">
+    <div class="row">
+      <button class="btn sm" id="copylink">نسخ</button>
+      <a class="btn ghost sm" id="walink" target="_blank" rel="noopener">إرسال بواتساب</a>
+    </div>
+    <p class="muted small">ينتهي: ${escHtml(d.expires_at)}</p>`;
+  const url = document.getElementById('liveurl');
+  document.getElementById('copylink').onclick = async () => {
+    try { await navigator.clipboard.writeText(full); $('copylink').textContent = 'تم النسخ ✔'; }
+    catch (e) { url.select(); document.execCommand('copy'); }
+  };
+  document.getElementById('walink').href =
+    'https://wa.me/?text=' + encodeURIComponent('موقع المريض: ' + full);
+  loadLinks();
+};
+
+async function loadLinks() {
+  try {
+    const d = await jget('/api/share/live');
+    $('links').innerHTML = d.links.length
+      ? d.links.map(l => `<li><span class="tag ${l.active ? 'ok' : 'warn'}">${l.active ? 'نشط' : 'منتهٍ'}</span>
+          <span class="muted small" style="direction:ltr">…${escHtml(l.token.slice(-8))}</span>
+          ${l.active ? `<button class="btn danger sm" data-rev="${escHtml(l.token)}">إلغاء</button>` : ''}</li>`).join('')
+      : '<li class="muted">لا توجد روابط</li>';
+    document.querySelectorAll('button[data-rev]').forEach(b => {
+      b.onclick = async () => {
+        await fetch('/api/share/live/' + b.dataset.rev, { method: 'DELETE' });
+        loadLinks();
+      };
+    });
+  } catch (e) {}
+}
+
+$('diag-exit').onclick = async () => {
+  const box = $('diag-box');
+  box.innerHTML = '<p class="muted small">جارٍ الفحص…</p>';
+  try {
+    const d = await fetch('/api/diagnose/exit-alert').then(r => r.json());
+    const icon = (ok) => ok === true ? '✅' : ok === false ? '❌' : 'ℹ️';
+    const esc2 = (t) => String(t || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    box.innerHTML = `<div style="background:${d.verdict === 'كل البنود سليمة' ? '#eaf7ee' : '#fdecec'};border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <b>النتيجة: ${esc2(d.verdict)}</b><div class="small" style="margin-top:4px">الحل: ${esc2(d.fix)}</div></div>
+      <div class="small">` + d.checks.map(c => `<div style="display:block;padding:7px 0;border-bottom:1px solid #eee;text-align:right">
+        <div>${icon(c.ok)} <b>${esc2(c.title)}</b></div>
+        ${c.detail ? `<div style="margin-right:24px">${esc2(c.detail)}</div>` : ''}
+        ${c.ok === false && c.fix ? `<div class="muted" style="margin-right:24px;margin-top:2px">← ${esc2(c.fix)}</div>` : ''}</div>`).join('') + '</div>';
+  } catch (e) { box.innerHTML = '<p class="muted small">تعذّر الفحص.</p>'; }
+};
+
+$('sim-exit').onclick = async () => {
+  const btn = $('sim-exit');
+  const msg = $('sim-msg');
+  btn.disabled = true;
+  msg.textContent = '…جارٍ المحاكاة';
+  try {
+    const r = await fetch('/api/simulator/exit-home?device_id=' + ACTIVE, { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) {
+      msg.textContent = d.detail || 'تعذّرت المحاكاة';
+    } else {
+      msg.textContent =
+        `✔ تم إنشاء تنبيه: «${d.alert ? d.alert.message : 'خرج من النطاق'}»` +
+        (d.delivered ? ' — ووصلت رسالة تيليجرام ✓'
+          : ' — ⚠️ لم تصل رسالة تيليجرام' + (d.delivery_detail ? ` (${d.delivery_detail})` : '') + ' — اضغطي «فحص السبب»') +
+        ' · بيانات محاكاة';
+      await primeTrail();
+      await load();
+    }
+  } catch (e) {
+    msg.textContent = 'تعذّر الاتصال';
+  }
+  btn.disabled = false;
+};
+
+$('check-stale').onclick = async () => {
+  const r = await fetch('/api/alerts/check-staleness', {method: 'POST'});
+  const d = await r.json();
+  if (!d.raised.length) alert('لا يوجد انقطاع يستدعي تنبيهًا.');
+  load();
+};
+
+document.getElementById('usegeo').onclick = () => {
+  if (!navigator.geolocation) { document.getElementById('zonemsg').textContent = 'المتصفح لا يدعم تحديد الموقع.'; return; }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      document.getElementById('zlat').value = pos.coords.latitude.toFixed(6);
+      document.getElementById('zlon').value = pos.coords.longitude.toFixed(6);
+      document.getElementById('zonemsg').textContent = 'تم أخذ موقعك الحالي. اضغطي «حفظ النطاق».';
+    },
+    () => { document.getElementById('zonemsg').textContent = 'تعذّر الحصول على الموقع — اسمحي للمتصفح أو أدخلي الإحداثيات يدويًا.'; },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+};
+
+document.getElementById('savezone').onclick = async () => {
+  const lat = parseFloat(document.getElementById('zlat').value);
+  const lon = parseFloat(document.getElementById('zlon').value);
+  const rad = parseFloat(document.getElementById('zrad').value || '300');
+  if (!isFinite(lat) || !isFinite(lon)) { document.getElementById('zonemsg').textContent = 'أدخلي إحداثيات صحيحة.'; return; }
+  const r = await fetch('/api/geofence', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name:'المنزل', lat, lon, radius_m: rad})
+  });
+  document.getElementById('zonemsg').textContent = r.ok ? 'تم حفظ النطاق ✔' : 'تعذّر الحفظ';
+  loadZones();
+};
+
+async function loadZones() {
+  try {
+    const z = await jget('/api/geofence');
+    document.getElementById('zones').innerHTML = z.zones.length
+      ? z.zones.map(x => `<li><span>${esc(x.name)} — ${x.radius_m} م</span>
+          <span class="muted small">${x.lat.toFixed(5)}, ${x.lon.toFixed(5)}</span></li>`).join('')
+      : '<li class="muted">لا يوجد نطاق محدد</li>';
+  } catch (e) {}
+}
+
+
+// ---- live map: trajectory + safe-zone circle, auto-refreshed ----
+let mapTimer = null;
+
+function haversine(la1, lo1, la2, lo2) {
+  const R = 6371000, r = Math.PI / 180;
+  const dLa = (la2 - la1) * r, dLo = (lo2 - lo1) * r;
+  const a = Math.sin(dLa/2)**2 + Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dLo/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+function drawMap(history, zones) {
+  const el = document.getElementById('map');
+  if (!el) return;
+  const pts = (history || []).slice().reverse();
+  const label = document.getElementById('maplabel');
+  if (!pts.length) {
+    el.innerHTML = '<div style="display:grid;place-items:center;height:100%;color:#6b6b85;font-size:14px">لا توجد إحداثيات بعد</div>';
+    label.textContent = 'لا يوجد موقع مسجّل — بانتظار الجهاز.';
+    return;
+  }
+  const lats = pts.map(p => p.lat).concat(zones.map(z => z.lat));
+  const lons = pts.map(p => p.lon).concat(zones.map(z => z.lon));
+  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  const minLon = Math.min(...lons), maxLon = Math.max(...lons);
+  const padLat = Math.max((maxLat - minLat) * 0.35, 0.004);
+  const padLon = Math.max((maxLon - minLon) * 0.35, 0.004);
+  const W = 560, H = 300;
+  const x = lon => ((lon - (minLon - padLon)) / ((maxLon + padLon) - (minLon - padLon))) * W;
+  const y = lat => H - ((lat - (minLat - padLat)) / ((maxLat + padLat) - (minLat - padLat))) * H;
+
+  const path = pts.map((p,i) => `${i?'L':'M'}${x(p.lon).toFixed(1)},${y(p.lat).toFixed(1)}`).join(' ');
+  const last = pts[pts.length - 1];
+
+  let circles = '';
+  for (const z of zones) {
+    const metresPerPx = ((maxLon+padLon)-(minLon-padLon)) * 111320 *
+      Math.cos(z.lat * Math.PI/180) / W;
+    const r = Math.max(6, z.radius_m / metresPerPx);
+    circles += `<circle cx="${x(z.lon)}" cy="${y(z.lat)}" r="${r}" fill="rgba(91,75,214,0.10)" stroke="#5b4bd6" stroke-dasharray="4 3" stroke-width="1.5"/>`;
+  }
+  const dots = pts.map(p => `<circle cx="${x(p.lon).toFixed(1)}" cy="${y(p.lat).toFixed(1)}" r="2.5" fill="#8f86e6"/>`).join('');
+
+  // Reuse the SVG element when it exists so the marker can transition
+  // between two coordinates instead of disappearing and reappearing.
+  let svg = el.querySelector('svg.map-svg');
+  const fresh = !svg;
+  if (fresh) {
+    el.innerHTML = `<svg class="map-svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" style="background:#f8f9ff">
+      <g class="zones"></g>
+      <path class="trail" fill="none" stroke="#5b4bd6" stroke-width="2.5" stroke-linejoin="round"/>
+      <g class="dots"></g>
+      <g class="marker">
+        <circle r="13" fill="rgba(229,72,77,0.18)"/>
+        <circle r="7" fill="#e5484d" stroke="#fff" stroke-width="2"/>
+      </g>
+    </svg>`;
+    svg = el.querySelector('svg.map-svg');
+  }
+
+  svg.querySelector('.zones').innerHTML = circles;
+  svg.querySelector('.trail').setAttribute('d', path);
+  svg.querySelector('.dots').innerHTML = dots;
+  const marker = svg.querySelector('.marker');
+  marker.setAttribute('transform',
+    `translate(${x(last.lon).toFixed(1)},${y(last.lat).toFixed(1)})`);
+  if (!fresh) {
+    marker.style.transition = 'transform 900ms ease-out';
+  }
+
+  const inside = zones.length ? zones.every(zz =>
+    haversine(last.lat, last.lon, zz.lat, zz.lon) <= zz.radius_m) : null;
+  const btn = document.getElementById('openmap');
+  if (btn) {
+    btn.href = `https://www.google.com/maps/search/?api=1&query=${last.lat.toFixed(6)},${last.lon.toFixed(6)}`;
+    btn.style.pointerEvents = 'auto';
+    btn.style.opacity = '1';
+  }
+  const meta = document.getElementById('mapmeta');
+  if (meta) {
+    meta.textContent = `آخر تحديث: ${last.reported_at}` +
+      (last.accuracy_m != null ? ` · دقة GPS: ±${Math.round(last.accuracy_m)} م` : '');
+  }
+
+  label.textContent = `آخر نقطة: ${last.lat.toFixed(5)}, ${last.lon.toFixed(5)} · عدد النقاط: ${pts.length} · ` +
+    (inside === null ? 'لا يوجد نطاق' : inside ? 'داخل النطاق ✅' : 'خارج النطاق ⚠️');
+}
+
+async function refreshLive() {
+  try {
+    const [hist, zones] = await Promise.all([
+      jget(`/api/location/history?device_id=${ACTIVE}&limit=40`),
+      jget('/api/geofence'),
+    ]);
+    drawMap(hist.history, zones.zones);
+  } catch (e) {}
+}
+
+function startLive() {
+  if (mapTimer) clearInterval(mapTimer);
+  mapTimer = setInterval(() => {
+    const cb = document.getElementById('autorefresh');
+    if (cb && cb.checked) refreshLive();
+  }, 3000);
+}
+
+// Push channel: the dot moves the moment a fix is stored, not on a poll.
+let feed = null;
+let feedTries = 0;
+
+function connectFeed() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  try {
+    feed = new WebSocket(`${proto}://${location.host}/ws/live`);
+  } catch (e) { return; }
+
+  feed.onmessage = (ev) => {
+    try {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === 'fix' && msg.location) {
+        // Ignore fixes from a different device than the one on screen.
+        if (msg.location.device_id === ACTIVE) pushFix(msg.location);
+      }
+    } catch (e) {}
+  };
+
+  feed.onclose = () => {
+    feed = null;
+    // Reconnect with a short backoff so a restart never leaves the map dead.
+    feedTries = Math.min(feedTries + 1, 6);
+    setTimeout(connectFeed, 1000 * feedTries);
+  };
+  feed.onopen = () => { feedTries = 0; };
+}
+
+// Local cache of recent fixes so the trajectory grows even without a refetch.
+let liveTrail = [];
+let liveZones = [];
+
+function pushFix(loc) {
+  const key = `${loc.reported_at}|${loc.lat}|${loc.lon}`;
+  if (liveTrail.some(p => `${p.reported_at}|${p.lat}|${p.lon}` === key)) return;
+  liveTrail.push({ lat: loc.lat, lon: loc.lon, reported_at: loc.reported_at });
+  if (liveTrail.length > 40) liveTrail.shift();
+  drawMap(liveTrail.slice().reverse(), liveZones, true);
+}
+
+async function primeTrail() {
+  try {
+    const [hist, zones] = await Promise.all([
+      jget(`/api/location/history?device_id=${ACTIVE}&limit=40`),
+      jget('/api/geofence'),
+    ]);
+    liveZones = zones.zones;
+    liveTrail = hist.history.slice().reverse();
+    drawMap(hist.history, liveZones, false);
+  } catch (e) {}
+}
+
+async function loadPublicStatus() {
+  const el = $('pubstatus');
+  try {
+    const t = await jget('/api/public-url');
+    if (t.public_url) {
+      el.innerHTML = '🌐 الرابط العام يعمل: <span style="direction:ltr;display:inline-block">' +
+        escHtml(t.public_url) + '</span> — روابط تيليجرام ستفتح على أي هاتف.';
+      el.style.color = 'var(--ok)';
+      return;
+    }
+    el.style.color = 'var(--warn)';
+    el.textContent = (t.status === 'starting' || t.status === 'downloading')
+      ? '⏳ ' + (t.detail || 'جارٍ فتح الرابط العام…')
+      : '⚠️ لا يوجد رابط عام بعد. ' + (t.detail || '') +
+        ' — حتى يعمل، ستحمل رسالة تيليجرام رابط خرائط جوجل وموقعًا مباشرًا داخل تيليجرام.';
+    if (t.status === 'starting' || t.status === 'downloading') setTimeout(loadPublicStatus, 3000);
+  } catch (e) { el.textContent = ''; }
+}
+
+requireAuth().then(async () => {
+  loadPublicStatus();
+  await resolveActive();
+  await load();
+  await loadZones();
+  await primeTrail();
+  await loadLinks();
+  startLive();
+  connectFeed();
+});
+</script>
+</body>
+</html>

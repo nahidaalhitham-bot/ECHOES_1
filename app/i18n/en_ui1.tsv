@@ -1,0 +1,340 @@
+(أو نسخة العرض العامة) مع اتصال إنترنت ثم اضغطي مرة ثانية.	(or the public demo version) with an internet connection, then press again.
+(أو نسخة العرض العامة) مع اتصال إنترنت، ثم حدّثي الصفحة.	(or the public demo version) with an internet connection, then refresh the page.
+(إذا عندك بوت سابق وكان رمزه محفوظًا، اتركي الخانة فارغة.)	(If you already have a bot whose token is saved, leave this empty.)
++ إضافة تذكير	+ Add reminder
++ إضافة مقدم رعاية	+ Add caregiver
++ صوت	+ Audio
++ صورة	+ Photo
+إلغاء	Cancel
+تأكيد وإغلاق	Confirm and close
+ECHOES — الإعدادات	ECHOES — Settings
+ECHOES — الذاكرة الشخصية	ECHOES — Personal memory
+ECHOES — العائلة والأبناء	ECHOES — Family
+ECHOES — المساعد البصري	ECHOES — Visual assistant
+ECHOES — المساعد الصوتي	ECHOES — Voice assistant
+ECHOES — تسجيل الدخول	ECHOES — Sign in
+ECHOES — حالة الجهاز	ECHOES — Device status
+ECHOES — كود المشروع	ECHOES — Project code
+ECHOES — مركز الأمان	ECHOES — Safety center
+ECHOES — مشاركة موقع المريض — ECHOES	ECHOES — Patient location sharing
+ECHOES — مقدمو الرعاية	ECHOES — Caregivers
+ECHOES — ملف المريض	ECHOES — Patient profile
+ECHOES — موقع المريض	ECHOES — Patient location
+ECHOES — نظرة عامة	ECHOES — Overview
+Echeos — الأمان والموقع	ECHOES — Safety and location
+Echeos — بطاقة المساعدة	ECHOES — Help card
+JPG أو PNG، حتى ٨ ميجابايت.	JPG or PNG, up to 8 MB.
+Telegram + بريد إلكتروني	Telegram + email
+WhatsApp Phone Number ID (المرسل)	WhatsApp Phone Number ID (sender)
+«ابدأ التحقيق» يقرأ ملف المريض والذكريات والصور والأصوات ومحادثات المساعد، ويجلب معلومات الأماكن والهوايات من الإنترنت، ويقترح الذكاء الاصطناعي خيوطًا إضافية (متقطعة) للمراجعة.	“Start investigation” reads the patient profile, memories, photos, sounds and assistant conversations, fetches information about places and hobbies from the internet, and AI suggests extra (dashed) threads for review.
+«رمز جديد» يلغي ربط الجوال السابق.	“New code” unlinks the previous phone.
+«📷 مسح QR جوال المريض»	“📷 Scan the patient's phone QR”
+· (الذكاء الاصطناعي غير مفعّل — من الإعدادات)	· (AI not enabled — see Settings)
+· الذكاء الاصطناعي:	· AI:
+· المسجّلون:	· Registered:
+· بيانات محاكاة	· simulated data
+· كاشف الأشياء:	· Object detector:
+؛ الإرسال التلقائي يحتاج تيليجرام أو WhatsApp Cloud.	; automatic sending needs Telegram or WhatsApp Cloud.
+آخر إرسال	Last sent
+آخر التنبيهات	Latest alerts
+آخر المواقع	Latest locations
+آخر تحديث:	Last update:
+آخر مزامنة	Last sync
+آخر موقع	Last location
+آخر موقع معروف	Last known location
+آخر موقع معروف — تعذر التحقق من التحديث	Last known location — could not verify the update
+أتحدث…	Speaking…
+أحتاج مساعدة	I need help
+أحداث الحياة	Life events
+أحداث الحياة المهمة	Important life events
+أداة تجريب	Test tool
+أدخل الاسم والمعلومات الأساسية والروتين والتفضيلات.	Enter the name, basic information, routine and preferences.
+أدخلي إحداثيات صحيحة.	Enter valid coordinates.
+أدلة من الملف	Evidence from the profile
+أراقب المكان…	Watching the surroundings…
+أرسل طلب مساعدة لعائلتي	Send a help request to my family
+أرقام هواتف للتنبيه — بدون رمز ولا حساب	Phone numbers to alert — no token or account
+أسمعك…	Listening to you…
+أسمع…	Listening…
+أضف الأشخاص والصور والأماكن والأشياء والأصوات واربطها.	Add people, photos, places, objects and sounds, and link them.
+أضف الجهاز، اختبر GPS، ثم أعدّ وسيلة إرسال التنبيه.	Add the device, test GPS, then set up how alerts are sent.
+أضف كل تذكير بموعده ونوعه. أمثلة: الصلاة، الدواء، عزيمة، عرس، موعد طبي، زيارة عائلية.	Add each reminder with its time and type. Examples: prayer, medicine, a dinner invitation, a wedding, a doctor's appointment, a family visit.
+أضيفي أكثر من مقدم رعاية وصلاحياتهم	Add several caregivers and their permissions
+أضيفي جهازًا، وستحصلين على رمز مرة واحدة تكتبينه في الجهاز.	Add a device and you will get a one-time token to enter on the device.
+أضيفي رقم ولي الأمر هنا. عند حدوث تنبيه ستحصلين على رابط جاهز:	Add the guardian's number here. When an alert happens you will get a ready link:
+أضيفي كل فرد وصورته — الكاميرا ستتعرّف عليه	Add each person and their photo — the camera will recognize them
+أضيفي معلومات في ملف المريض ثم اضغطي «ابدأ التحقيق».	Add information to the patient profile, then press “Start investigation”.
+أفراد العائلة (	Family members (
+أفكر…	Thinking…
+أنشئي رابطًا مؤقتًا وأرسليه لوالدة المريض أو أخيه عبر واتساب.	Create a temporary link and send it to the patient's mother or brother on WhatsApp.
+أو	or
+أو أرسلي هذا الرابط لأفراد العائلة (صالح	Or send this link to family members (valid
+أو أرسلي هذا الرابط للجوال (لا تشاركيه مع غيرك):	Or send this link to the phone (don't share it with anyone else):
+أو استخدمي SMTP بدون كلمة مرور. للإرسال التلقائي بالبريد لا حاجة لحساب أعمال.	Or use SMTP without a password. Automatic email sending needs no business account.
+أو اكتب الرمز في لوحة التحكم:	Or type the code in the dashboard:
+أو اكتبي هذا الرمز في لوحة التحكم:	Or type this code in the dashboard:
+أو رمز يُكتب في الساعة	Or a code typed on the watch
+أوقف الاستماع	Stop listening
+أين هو الآن؟	Where is he now?
+إدارة مقدمي الرعاية	Manage caregivers
+إذا رأت الكاميرا المريض يلمس أو يتناول أحدها يُرسل إشعار فوري للأسرة، وتنبّهه الساعة بصوت هادئ.	If the camera sees the patient touching or eating one of these, the family is notified instantly and the watch warns him calmly.
+إذا سأل أحد سؤالًا ولم يرد المريض خلال	If someone asks a question and the patient doesn't answer within
+إذا مرّت أكثر من ساعة على التشغيل: الإعدادات ← «ربط تيليجرام بضغطة».	If more than an hour has passed since starting: Settings → “One-tap Telegram linking”.
+إذن الموقع مرفوض — اسمح بالموقع من إعدادات المتصفح	Location permission denied — allow location in the browser settings
+إرسال بواتساب	Send via WhatsApp
+إرسال رسالة تجريبية	Send a test message
+إرفاق صوت أو صورة للذاكرة	Attach audio or a photo to the memory
+إشعارات الطوارئ — وصول الرسائل إلى الهاتف	Emergency notifications — messages reaching the phone
+إشعارات تيليجرام	Telegram notifications
+إضافة	Add
+إضافة جهاز	Add device
+إضافة ذكرى	Add memory
+إضافة رقم	Add number
+إضافة عنصر إلى الشبكة	Add an item to the network
+إضافة فرد من العائلة	Add a family member
+إضافة للشبكة	Add to network
+إضافة مقدم رعاية	Add caregiver
+إظهار بطاقات أقسام الملف	Show profile section cards
+إعادة آخر رد	Replay last answer
+إعادة ترتيب اللوحة	Rearrange the board
+إعداد الأمان	Safety setup
+إعدادات النظام	System settings
+إلغاء ربط الكل	Unlink all
+إلغاء ربط كل المحادثات؟	Unlink all chats?
+إن لم تبدأ، اسمحي للمتصفح بالوصول إلى الكاميرا	If it doesn't start, allow the browser to access the camera
+إنشاء الحساب	Create account
+إنشاء حساب مقدم الرعاية الأول	Create the first caregiver account
+إنشاء رابط	Create link
+إنشاء رابط الانضمام	Create join link
+إيقاف	Stop
+إيقاف التعرّف	Pause recognition
+إيقاف الميكروفون	Turn off microphone
+ابدأ الاستماع	Start listening
+ابدأ بتجهيز المعلومات التي يعتمد عليها التطبيق. لا تُعرض أي معلومات شخصية أو موقع إلا بعد تسجيلها وإعداد الجهاز.	Start by preparing the information the app relies on. No personal information or location is shown until it is entered and the device is set up.
+ابدأ مشاركة الموقع	Start sharing location
+اتركي الصفحة مفتوحة — يظهر «جوال المريض» هنا متصلًا.	Keep the page open — “Patient's phone” appears here as connected.
+اتصال القلادة	Necklace connection
+احتياجات الحركة	Mobility needs
+احفظيه الآن — لن يظهر مرة أخرى.	Save it now — it won't be shown again.
+اختاري الذكرى أو العنصر الذي تريدين إرفاق ملف به، ثم استخدمي خانة الصوت أو خانة الصورة. لا يوجد اختياران متشابهان أو مبهمان.	Choose the memory or item to attach a file to, then use the audio or photo field.
+اختاري العنصر أولا قبل رفع الملف	Choose the item before uploading the file
+اختاري عنصرين مختلفين واكتبي نوع العلاقة	Choose two different items and write the type of relationship
+اختر ملفًا	Choose a file
+اختيار ذكرى حسب النوع والاسم	Choose a memory by type and name
+اختيار عنصر حسب النوع والاسم	Choose an item by type and name
+ارفعي صورة واضحة لكل فرد	Upload a clear photo of each person
+اسأل	Ask
+اسأل الآن	Ask now
+اسأل بصوتك. سأسمعك وأجيبك بصوت.	Ask with your voice. I'll listen and answer out loud.
+استئناف التعرّف	Resume recognition
+استخدم موقعي الحالي	Use my current location
+استخدمي موقعك الحالي إن كنت في منزل المريض، أو أدخلي الإحداثيات.	Use your current location if you are at the patient's home, or enter coordinates.
+استقبال GPS من جهاز حقيقي	GPS from a real device
+اسم المساعد	Assistant name
+اسم المساعد وعبارة التنشيط والصوت	Assistant name, wake phrase and voice
+اسمحي للمتصفح بالوصول، وتأكدي أن الصفحة على http://127.0.0.1 وليس https	Allow the browser access, and make sure the page is on http://127.0.0.1, not https
+اضغط للبدء	Tap to start
+اضغطي الزر هنا ووجّهي الكاميرا لشاشة جوال المريض. يرتبط فورًا ويبدأ بإرسال الموقع.	Press the button here and point the camera at the patient's phone screen. It links instantly and starts sending its location.
+اضغطي على أي بطاقة لرؤية الأدلة والخيوط المتصلة بها.	Click any card to see its evidence and connected threads.
+اضغطي على أي بطاقة لرؤية الأدلة والخيوط المتصلة بها. يمكنك سحب البطاقات لترتيب اللوحة.	Click any card to see its evidence and connected threads. You can drag cards to arrange the board.
+افتح الخريطة	Open map
+افتح الموقع في خرائط جوجل	Open the location in Google Maps
+افتح موقع المريض في خرائط جوجل	Open the patient's location in Google Maps
+افتحي	Open
+افتحي البوت من جوالك واضغطي	Open the bot on your phone and press
+افتحي الرابط واسمحي بالموقع.	Open the link and allow location.
+افتحي الكاميرا في جوال المريض ووجّهيها للرمز.	Open the camera on the patient's phone and point it at the code.
+افتحي تطبيق ECHOES على الساعة — يظهر عليها رمز QR. اضغطي «مسح QR الساعة» ووجّهي كاميرا الجوال أو اللابتوب نحو الساعة، وتنربط وحدها خلال ثوانٍ وتصير هي موقع المريض. الساعة ترسل موقعها في الخلفية، وفيها زر «أحتاج مساعدة».	Open the ECHOES app on the watch — it shows a QR code. Press “Scan watch QR” and point the phone or laptop camera at the watch; it links itself within seconds and becomes the patient's location. The watch sends its location in the background and has an “I need help” button.
+افتحي هذه الصفحة على الجوال الذي يحمله المريض، واضغطي «ابدأ». يُحدّث الموقع تلقائيًا أثناء بقاء الصفحة مفتوحة والسماح بالموقع. لا يدعم المتصفح تتبعًا مضمونًا عند إغلاق الصفحة.	Open this page on the phone the patient carries and press “Start”. The location updates automatically while the page stays open and location is allowed. Browsers can't guarantee tracking once the page is closed.
+افصلي بين العناصر بفاصلة.	Separate items with commas.
+اقتراح الذكاء الاصطناعي	AI suggestion
+اقتراح من الذكاء الاصطناعي	Suggested by AI
+اكتب اسم التذكير أولا	Enter the reminder name first
+اكتبي اسم الجهاز	Enter the device name
+اكتبي اسم العنصر	Enter the item name
+اكتبي الموضوع والجملة	Enter the subject and the sentence
+اكتبي هذا الرمز في تطبيق ECHOES على الساعة	Type this code in the ECHOES app on the watch
+اكتشاف السقوط	Fall detection
+اكتمال الملف	Profile completion
+الأدوية الحالية	Current medications
+الأشخاص المهمون	Important people
+الأطعمة المفضلة	Favourite foods
+الأماكن المفضلة	Favourite places
+الأمان والخصوصية — للكاميرا والمساعد	Safety and privacy — for the camera and assistant
+الأمان والموقع	Safety and location
+الأنشطة المفضلة	Favourite activities
+الإحداثيات تأتي من جهاز مرتبط عبر صفحة «حالة الجهاز».	Coordinates come from a device linked on the “Device status” page.
+الإدارة	Administration
+الإعدادات	Settings
+الإنترنت	Internet
+الاستعانة بالإنترنت (أماكن، هوايات، أسئلة عامة) — لا يُبحث أبدًا عن أسماء أفراد الأسرة	Use the internet (places, hobbies, general questions) — family members' names are never searched
+الاسم الكامل	Full name
+الاسم المفضل (الكنية)	Preferred name (nickname)
+الاسم المفضل	Preferred name
+الاسم مطلوب	Name is required
+البريد الإلكتروني	Email
+البوت:	Bot:
+البيانات تُعلَّم «محاكي» ولا تُعرض كموقع حقيقي.	The data is marked “simulator” and is never shown as a real location.
+التذكيرات التلقائية والمواعيد	Automatic reminders and appointments
+التعرف على الوجوه	Face recognition
+التعرّف على الوجوه والأشياء يتم على هذا الجهاز. إذا فعّلت الأسرة الذكاء الاصطناعي من الإعدادات تُرسل لقطة كل بضع ثوانٍ لتحليلها.	Face and object recognition happens on this device. If the family enables AI in Settings, a snapshot is sent every few seconds for analysis.
+التعليم	Education
+التفضيلات الشخصية	Personal preferences
+التنبيهات	Alerts
+التنبيهات والأمان	Alerts and safety
+التنبيهات ومقدمو الرعاية للاتصال	Alerts and caregivers to contact
+الجنس	Gender
+الحساسية	Allergies
+الحل:	Fix:
+الخادم	Server
+الخريطة الكاملة	Full map
+الخريطة المباشرة	Live map
+الخصوصية والأمان	Privacy and security
+الذاكرة الشخصية	Personal memory
+الذاكرة والتذكير	Memory and reminders
+الذكاء الاصطناعي والإنترنت	AI and internet
+الذكرى / العنصر المراد إرفاق الملفات به	Memory / item to attach files to
+الذكريات المهمة	Important memories
+الذكريات المهمة والأشخاص المقربون	Important memories and close people
+الرئيسية	Home
+الرابط العام غير جاهز بعد. شغّلي	The public link isn't ready yet. Run
+الرابط العام غير جاهز بعد، والجوال يحتاج رابط https ليقرأ الموقع.	The public link isn't ready yet, and the phone needs an https link to read its location.
+الرابط العام غير جاهز بعد، والساعة تحتاجه لتتصل بالتطبيق من أي مكان.	The public link isn't ready yet, and the watch needs it to reach the app from anywhere.
+الرابط العام غير جاهز — شغّلي الخيار 1 من أيقونة ECHOES	Public link not ready — start option 1 from the ECHOES icon
+الرسالة:	Message:
+الرمز (Token)	Token
+الروتين اليومي	Daily routine
+الروتين	Routine
+السكين والمقص والفرن مضافة تلقائيًا. عند اقترابه منها أو إمساكها يُرسل إشعار فوري.	Knife, scissors and oven are added automatically. If he gets close to or holds one, an instant notification is sent.
+السيرة والمعلومات الشخصية	Biography and personal information
+الصقي الرمز هنا واضغطي «إنشاء رابط الانضمام».	Paste the token here and press “Create join link”.
+الصوت	Voice
+الصوت الخارجي TTS	External TTS voice
+الصوت غير متاح على هذا الجهاز — الرد مكتوب أمامك.	Voice isn't available on this device — the answer is written in front of you.
+الصورة	Photo
+الصورة بلا وجه واضح	Photo without a clear face
+العائلة والأبناء	Family and children
+العادات والروتين اليومي	Habits and daily routine
+العمر	Age
+العنصر الأول	First item
+العنصر المرتبط	Linked item
+القلادة والمحاكي — ما يعمل وما هو محاكى	Necklace and simulator — what is real and what is simulated
+القناة جاهزة — ستصل رسائل الخروج من المنزل إلى الهاتف.	Channel ready — leaving-home messages will reach the phone.
+الكاميرا والميكروفون يعملان تلقائيًا: أذكّرك بما تراه وأسمعه، وأنبّه أهلك عند الخطر.	The camera and microphone work automatically: I remind you about what you see and hear, and alert your family if there is danger.
+اللغة	Language
+اللهجة المفضلة	Preferred dialect
+المتصفح لا يدعم التعرف على الكلام. استخدم Chrome.	This browser doesn't support speech recognition. Use Chrome.
+المتصفح لا يدعم التعرف على الكلام. استخدمي Chrome.	This browser doesn't support speech recognition. Use Chrome.
+المتصفح لا يدعم النطق الصوتي.	This browser doesn't support speech output.
+المتصفح لا يدعم تحديد الموقع.	This browser doesn't support location.
+المريض	Patient
+المريض ردّ بنفسه — لن أجيب عنه.	The patient answered himself — I won't answer for him.
+المسؤولون	Caregivers
+المساعد البصري	Visual assistant
+المساعد الصوتي	Voice assistant
+المساعد والكاميرا	Assistant and camera
+المشروبات المفضلة	Favourite drinks
+المعلومات الطبية	Medical information
+المنزل	Home
+المنفذ	Port
+المهنة السابقة	Former occupation
+المواعيد وجلسات المراجعة	Appointments and review sessions
+الموافقة قبل التعرف على الوجه	Consent before face recognition
+الموسيقى المفضلة	Favourite music
+الموقع الحالي	Current location
+الموقع المباشر	Live location
+الموقع غير متاح حاليًا (لا إشارة GPS).	Location unavailable right now (no GPS signal).
+الموقع فقط	location only
+الموقع مباشر	Location is live
+الموقع والأمان	Location and safety
+الموقع والنطاقات والتنبيهات	Location, zones and alerts
+الميكروفون ممنوع — اسمح للمتصفح	Microphone blocked — allow it in the browser
+الميكروفون ممنوع — اسمحي للمتصفح	Microphone blocked — allow it in the browser
+النتيجة:	Result:
+النموذج	Model
+الهوايات	Hobbies
+الهواية	Hobby
+الوجوه:	Faces:
+الوصف: ماذا توضح الصورة أو ماذا يحتوي التسجيل؟	Description: what does the photo show or what is in the recording?
+الوظيفة أو الغرض	Function or purpose
+امسحي الرمز أو افتحي الرابط من جوالك واضغطي	Scan the code or open the link on your phone and press
+امسحي رمز QR التالي بكاميرا جوال المريض واسمحي بالموقع. لا يحتاج تسجيل دخول على الجوال، ويبقى مربوطًا حتى لو أُغلقت الصفحة وفُتحت من جديد. الرمز ثابت ولا يتغير إلا إذا ضغطتِ «رمز جديد».	Scan this QR code with the patient's phone camera and allow location. No sign-in is needed on the phone, and it stays linked even if the page is closed and reopened. The code stays the same unless you press “New code”.
+انتهت صلاحية هذا الرابط أو أُلغي.	This link has expired or was revoked.
+انتهت مهلة الحصول على الموقع.	Timed out getting the location.
+انتهى ربط هذا الجوال — امسحي الرمز الظاهر من لوحة التحكم.	This phone is no longer linked — scan the code shown from the dashboard.
+انقطاع اتصال	Connection lost
+انقطاع تحديث الموقع	Location updates stopped
+بانتظار المسح…	Waiting for scan…
+بانتظار المسح… (الرمز صالح 15 دقيقة)	Waiting for scan… (code valid for 15 minutes)
+بانتظار المسح… (صالح 15 دقيقة)	Waiting for scan… (valid for 15 minutes)
+بانتظار مستشعر الساعة	Waiting for the watch sensor
+بدون (تنبيهات داخل التطبيق فقط)	None (in-app alerts only)
+بدون إعداد قناة، تُنشأ التنبيهات داخل التطبيق فقط ولا تصل رسالة إلى الهاتف.	Without a channel, alerts are created in the app only and no message reaches the phone.
+بدون مفتاح: يعمل كاشف الأشياء على الجهاز، وتُجلب معلومات الأماكن والهوايات من ويكيبيديا، وتُكتب التذكيرات من كلام الأسرة كما هو.	Without a key: the object detector runs on the device, information about places and hobbies comes from Wikipedia, and reminders use the family's words as written.
+بريد إلكتروني (Email)	Email
+بريد المرسل (SMTP User)	Sender email (SMTP User)
+بريد المستلم	Recipient email
+بطاقة ·	cards ·
+بيانات العرض التجريبي موسومة بوضوح، والموقع لا يُعتبر مباشرًا إلا إذا كان آخر تحديث حقيقيًا وحديثًا.	Demo data is clearly labelled, and a location counts as live only if the last update is real and recent.
+بيانات الموقع والمعلومات الطبية لا تظهر إلا بعد التحقق من الهوية.	Location data and medical information appear only after identity verification.
+تاريخ الميلاد	Date of birth
+تبديل الكاميرا	Switch camera
+تتحدث الخريطة تلقائيا كل 4 ثوان عند وصول بيانات GPS جديدة.	The map updates automatically every 4 seconds when new GPS data arrives.
+تحديث	Refresh
+تحديث تلقائي كل ٣ ثوانٍ	Auto-refresh every 3 seconds
+تحديد النطاق الآمن	Set the safe zone
+تحليل لقطات الكاميرا بالذكاء الاصطناعي	Analyse camera snapshots with AI
+تحليل لقطة كل (ثانية)	Analyse a snapshot every (seconds)
+تذكير آخر	Other reminder
+تذكير قديم	Old reminder
+تسجيل الدخول	Sign in
+تشغيل الصوت	Turn on sound
+تشغيل الميكروفون	Turn on microphone
+تشفير الاتصال	Connection encryption
+تصرف خطير	Dangerous behaviour
+تعبئة إعدادات Gmail تلقائيًا	Fill in Gmail settings automatically
+تعديل	Edit
+تعديل مقدم رعاية	Edit caregiver
+تعذر الإضافة	Could not add
+تعذر التحقق من تحديث الموقع	Could not verify the location update
+تعذر حفظ الرابط	Could not save the link
+تعذر رفع الملف. تأكدي أن العنصر المحدد مرتبط بذكرى قابلة لإرفاق ملفات.	Could not upload the file. Make sure the selected item is linked to a memory that accepts attachments.
+تعذّر إرسال الموقع (	Could not send the location (
+تعذّر إنشاء الرمز:	Could not create the code:
+تعذّر الإنشاء	Could not create
+تعذّر الاتصال	Could not connect
+تعذّر الاتصال بالخادم — حدّث الصفحة.	Could not reach the server — refresh the page.
+تعذّر الاتصال بالخادم. تأكدي من الإنترنت ثم حدّثي الصفحة.	Could not reach the server. Check the internet, then refresh the page.
+تعذّر الاتصال بالمساعد.	Could not reach the assistant.
+تعذّر التحقيق:	Investigation failed:
+تعذّر الحذف	Could not delete
+تعذّر الحصول على الموقع — اسمحي للمتصفح أو أدخلي الإحداثيات يدويًا.	Could not get the location — allow the browser or enter coordinates manually.
+تعذّر الحصول على الموقع.	Could not get the location.
+تعذّر الحفظ	Could not save
+تعذّر الربط:	Linking failed:
+تعذّر الرفع	Upload failed
+تعذّر الفحص.	Check failed.
+تعذّر تحميل البيانات.	Could not load the data.
+تعذّر تحميل الذكريات.	Could not load memories.
+تعذّر تشغيل الكاميرا.	Could not start the camera.
+تعذّر رفع الصوت	Could not upload the audio
+تعذّر رفع الصورة	Could not upload the photo
+تعذّر فتح الكاميرا: اسمحي للمتصفح بالكاميرا (من الجوال افتحي التطبيق عبر الرابط العام https).	Could not open the camera: allow camera access in the browser (on a phone, open the app through the public https link).
+تعذّرت الإضافة	Could not add
+تعذّرت المحاكاة	Simulation failed
+تعليمات طبية مهمة	Important medical instructions
+تفضيلات التذكير التلقائي	Automatic reminder preferences
+تفضّل، اسأل…	Go ahead, ask…
+تفعيل التذكير التلقائي	Enable automatic reminders
+تفعيل الصوت	Enable sound
+تكبير	Zoom in
+تم أخذ موقعك الحالي. اضغطي «حفظ النطاق».	Your current location was taken. Press “Save zone”.
+تم إرسال إشعار للأسرة الآن.	The family has just been notified.
+تم إرسال طلب المساعدة.	Help request sent.
+تم الإرسال · تنبيه أُطلق	Sent · alert triggered
+تم الإرسال ✔	Sent ✔
+تم الحفظ ✔	Saved ✔
+تم النسخ ✔	Copied ✔
+تم حفظ الرابط	Link saved
+تم حفظ النطاق ✔	Zone saved ✔
+تم رفض إذن الموقع. افتحي إعدادات المتصفح واسمحي بالوصول.	Location permission was denied. Open the browser settings and allow access.

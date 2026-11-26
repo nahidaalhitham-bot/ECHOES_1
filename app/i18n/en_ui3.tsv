@@ -1,0 +1,93 @@
+123456789:AA… (رمز البوت)	123456789:AA… (bot token)
+9665XXXXXXXX بدون +	9665XXXXXXXX without +
+sk-ant-… (اتركيه فارغًا للإبقاء على المحفوظ)	sk-ant-… (leave empty to keep the saved one)
+أو اكتبي الرمز (مثل ABCD-EFGH)	or type the code (e.g. ABCD-EFGH)
+اتركيه فارغًا للإبقاء على المحفوظ	Leave empty to keep the saved value
+اتركيها فارغة للإبقاء على المحفوظ	Leave empty to keep the saved value
+اسم التذكير	Reminder name
+اسم الجهاز (مثال: ساعة محمد)	Device name (e.g. Mohammed's watch)
+اسم العنصر	Item name
+اسم شخص أو مكان أو حدث مسجل	Name of a recorded person, place or event
+اكتب وصفا واضحا	Write a clear description
+الابن، الابنة…	son, daughter…
+الاسم (اختياري)	Name (optional)
+العلاقة: زار / عاش في / حدث في / مع	Relationship: visited / lived in / happened in / with
+القرابة (الابن، الابنة…)	Relationship (son, daughter…)
+الموضوع (أحمد، الحديقة…)	Subject (Ahmed, the garden…)
+الهاتف (اختياري)	Phone (optional)
+تفاصيل أو تعليمات إضافية	Extra details or instructions
+تفاصيل قصيرة	Short details
+جملة واحدة واضحة	One clear sentence
+مثال: 123456789012345	e.g. 123456789012345
+مثال: الابن الأكبر / جرس باب المنزل / مكان السكن	e.g. the eldest son / the front doorbell / where he lives
+مثال: محمد ابن المريض	e.g. Mohammed, the patient's son
+نصف القطر (م)	Radius (m)
+اضغط للبدء أو الإيقاف	Tap to start or stop
+عندما يسأل شخص سؤالًا ولا يرد المريض خلال ١٣ ثانية يجيب المساعد عنه — إلا هذه المواضيع، والمعلومات الطبية والعنوان والأرقام والأموال (محجوبة دائمًا). افصلي بين العناصر بفاصلة.	When someone asks a question and the patient doesn't answer within 13 seconds, the assistant answers for him — except these topics, and medical information, address, numbers and money (always withheld). Separate items with commas.
+يحتاج حساب Meta Business وتطبيق واتساب معتمد. واتساب يسمح بالرسائل الحرة فقط خلال ٢٤ ساعة من آخر رسالة من المستلم؛ خارجها يلزم قالب معتمد.	Needs a Meta Business account and an approved WhatsApp app. WhatsApp allows free-form messages only within 24 hours of the recipient's last message; otherwise an approved template is required.
+داخل المنزل	At home
+متصل	Connected
+غير متصل	Disconnected
+مغلق	Closed
+مفتوح	Open
+محاكي	Simulator
+محاكى	Simulated
+حقيقي	Real
+غير متوفر	Not available
+غير متوفرة	Not available
+غير مفعّل	Not enabled
+مفعّل	Enabled
+أساسي	Primary
+الابن	Son
+الابنة	Daughter
+يومي/غير محدد	Daily/unspecified
+الوظيفة:	Function:
+يرتبط بـ:	Linked to:
+عدد النقاط:	Points:
+آخر نقطة:	Last point:
+داخل النطاق ✅	Inside the zone ✅
+خارج النطاق ⚠️	Outside the zone ⚠️
+بطارية	battery
+قلادة الصدى (محاكاة)	Echo necklace (simulated)
+لمس شيء يتحسس منه	Touched an allergen
+خرج من النطاق الآمن	Left the safe zone
+طلب مساعدة	Help requested
+انقطاع الاتصال	Connection lost
+موقع قديم	Stale location
+أوقات الصلاة، مواعيد الدواء، أسماء المقربين عند رؤيتهم، تنبيهات السلامة	Prayer times, medication times, names of close people when seen, safety alerts
+📲 تطبيق المريض — رابط منفصل	📲 Patient app — separate link
+هذا الرابط لجوال المريض فقط: يفتح شاشة المريض (المساعد الصوتي) ولا يمكن منه الدخول إلى لوحة المسؤول. امسحيه بكاميرا جوال المريض أو أرسليه له. لوحة المسؤول لها رابطها الخاص بتسجيل الدخول.	This link is for the patient's phone only: it opens the patient screen (voice assistant) and cannot reach the caregiver dashboard. Scan it with the patient's phone camera or send it to him. The caregiver dashboard has its own sign-in link.
+جارٍ التجهيز…	Preparing…
+🔄 رابط جديد للمريض	🔄 New patient link
+امسحي الرمز بكاميرا جوال المريض، أو أرسلي له الرابط:	Scan the code with the patient's phone camera, or send him the link:
+«رابط جديد للمريض» يوقف الرابط القديم على كل الأجهزة.	“New patient link” stops the old link on every device.
+الرابط الجديد سيوقف تطبيق المريض على الجوال الحالي حتى يُفتح الرابط الجديد. متأكدة؟	The new link will stop the patient app on the current phone until the new link is opened. Are you sure?
+رابط «تطبيق المريض» أعلاه	the “Patient app” link above
+على جوال المريض افتحي <b>شاشة المريض</b> في التطبيق:	On the patient's phone open the <b>patient screen</b> in the app:
+رابط المريض غير صالح	Invalid patient link
+افتح رابط «جوال المريض» الذي يصل من المسؤول (في تيليجرام أو صفحة «حالة الجهاز»).	Open the “patient's phone” link sent by the caregiver (on Telegram or the “Device status” page).
+رابط المريض غير صالح — اطلبي الرابط الجديد من المسؤول	Invalid patient link — ask the caregiver for the new link
+يجب تسجيل الدخول	Sign-in required
+الرابط العام غير جاهز — شغّلي الخيار 1 من أيقونة ECHOES. على هذا الكمبيوتر:	Public link not ready — start option 1 from the ECHOES icon. On this computer:
+على جوال المريض افتحي	On the patient's phone open
+في التطبيق:	in the app:
+أضيفي معلومات في ملف المريض ثم اضغطي «ابدأ التحقيق». (لإظهار بطاقات أقسام الملف فعّلي «إظهار بطاقات أقسام الملف».)	Add information to the patient profile, then press “Start investigation”. (To show profile section cards, turn on “Show profile section cards”.)
+هذا رابط تطبيق المريض	This is the patient app link
+لوحة المسؤول لها رابط مختلف.	The caregiver dashboard has a different link.
+فتح شاشة المريض	Open the patient screen
+🌐 روابط التطبيق (تفتح من أي جوال)	🌐 App links (open from any phone)
+🌐 روابط التطبيق	🌐 App links
+رابط المسؤول	Caregiver link
+— لوحة التحكم، بتسجيل الدخول	— dashboard, with sign-in
+رابط المريض	Patient link
+— تطبيق المريض فقط (رابط مختلف)	— patient app only (different link)
+— جارٍ تجهيز رابط المريض المنفصل…	— preparing the separate patient link…
+الروابط تتغير عند كل إعادة تشغيل — وتصلك الجديدة على تيليجرام إذا كان مربوطًا.	The links change on every restart — the new ones reach you on Telegram if it is linked.
+التطبيق شغّال على هذا الكمبيوتر فقط الآن (127.0.0.1)، فلا يوجد رابط للجوال.	The app is running on this computer only right now (127.0.0.1), so there is no link for phones.
+أغلقي النافذة السوداء، ثم افتحي أيقونة	Close the black window, then open the
+واختاري	icon and choose
+— يظهر هنا رابط المسؤول ورابط المريض.	— the caregiver and patient links appear here.
+📲 ثبّتي تطبيق المريض على هذا الجوال	📲 Install the patient app on this phone
+تثبيت	Install
+في Safari: زر المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية»	In Safari: Share ⬆️ → “Add to Home Screen”
+من قائمة المتصفح ⋮ ← «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية»	From the browser menu ⋮ → “Install app” or “Add to Home screen”

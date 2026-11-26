@@ -1,0 +1,12 @@
+app/uploads/*
+!app/uploads/.gitkeep
+app/.secret_key
+*.db
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# cloudflared downloaded automatically by app/tunnel.py
+app/bin/
+telegram_token.txt

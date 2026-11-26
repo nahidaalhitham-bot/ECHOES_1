@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<script src="/static/i18n.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECHOES — تسجيل الدخول</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  body { display: grid; place-items: center; min-height: 100vh; padding: 20px; }
+  .loginbox { width: 100%; max-width: 420px; }
+  .logobig { text-align: center; margin-bottom: 20px; }
+  .logobig .ring {
+    width: 62px; height: 62px; border-radius: 50%;
+    background: var(--brand); color: #fff; font-size: 26px; font-weight: 800;
+    display: grid; place-items: center; margin: 0 auto 10px;
+  }
+</style>
+</head>
+<body>
+  <div class="loginbox">
+    <div class="logobig">
+      <div class="ring">E</div>
+      <h1 style="margin:0">ECHOES</h1>
+      <p class="sub">نظام الأمان والمساعدة الذكي</p>
+    </div>
+
+    <div class="card">
+      <h2 id="title">تسجيل الدخول</h2>
+      <div class="field"><label>البريد الإلكتروني</label><input id="email" type="email" autocomplete="username"></div>
+      <div class="field"><label>كلمة المرور</label><input id="password" type="password" autocomplete="current-password"></div>
+      <div class="field hidden" id="namefield"><label>الاسم الكامل</label><input id="full_name"></div>
+      <div class="row">
+        <button class="btn" id="go">دخول</button>
+        <span id="msg" class="muted small"></span>
+      </div>
+      <p class="muted small" style="margin-top:14px">
+        بيانات الموقع والمعلومات الطبية لا تظهر إلا بعد التحقق من الهوية.
+      </p>
+    </div>
+  </div>
+
+<script>
+// Demo mode: show and pre-fill the demo account.
+fetch('/health').then(r => r.json()).then(h => {
+  if (!h.demo_mode) return;
+  const e = document.getElementById('email'), p = document.getElementById('password');
+  if (e && !e.value) e.value = 'demo@echoes.app';
+  if (p && !p.value) p.value = 'Echoes2026';
+  const note = document.createElement('p');
+  note.className = 'muted small';
+  note.style.cssText = 'background:#f3ecfb;padding:10px;border-radius:10px;margin-top:10px';
+  note.textContent = 'نسخة العرض المحاكية: البيانات وهمية. الحساب: demo@echoes.app — كلمة المرور: Echoes2026';
+  if (h.public_url) {
+    const a = document.createElement('div');
+    a.style.cssText = 'margin-top:8px;direction:ltr;text-align:left;font-weight:700;word-break:break-all';
+    a.innerHTML = '🌐 <a href="' + h.public_url + '" target="_blank">' + h.public_url + '</a>';
+    note.appendChild(a);
+  }
+  (p ? p.closest('.field') : document.body).after(note);
+}).catch(() => {});
+</script>
+<script>
+let setupMode = false;
+
+async function init() {
+  const s = await fetch('/api/auth/status').then(r => r.json());
+  try {
+    if (new URLSearchParams(location.search).has('unlock')) localStorage.removeItem('echoes_role');
+    else if (localStorage.getItem('echoes_role') === 'patient') { location.replace('/patient'); return; }
+  } catch (e) {}
+  if (s.authenticated) { location.href = '/dashboard'; return; }
+  if (s.needs_setup) {
+    setupMode = true;
+    document.getElementById('title').textContent = 'إنشاء حساب مقدم الرعاية الأول';
+    document.getElementById('namefield').classList.remove('hidden');
+    document.getElementById('go').textContent = 'إنشاء الحساب';
+  }
+}
+
+document.getElementById('go').onclick = async () => {
+  const body = {
+    email: document.getElementById('email').value.trim(),
+    password: document.getElementById('password').value,
+    full_name: document.getElementById('full_name').value || 'مقدم الرعاية',
+    role: 'owner',
+  };
+  const url = setupMode ? '/api/auth/register' : '/api/auth/login';
+  const r = await fetch(url, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (r.ok) { location.href = '/dashboard'; return; }
+  const d = await r.json().catch(() => ({}));
+  document.getElementById('msg').textContent = d.detail || 'فشل تسجيل الدخول';
+};
+
+document.getElementById('password').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('go').click();
+});
+
+init();
+</script>
+</body>
+</html>

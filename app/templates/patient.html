@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<script src="/static/i18n.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECHOES — المساعد الصوتي</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="manifest" id="pwaManifest" href="/patient.webmanifest">
+<meta name="theme-color" content="#3b1d5c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ECHOES">
+<link rel="apple-touch-icon" href="/static/icons/patient-192.png">
+<script>
+try {   // the installed app opens already linked (key inside its start address)
+  const k = localStorage.getItem('echoes_patient_key') || (location.hash.match(/k=([A-Za-z0-9_\-]+)/) || [])[1];
+  if (k) document.getElementById('pwaManifest').href = '/patient.webmanifest?k=' + encodeURIComponent(k);
+} catch (e) {}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+</script>
+
+<script>
+/* Patient app: separate link /patient#k=<key>. Keep the key on this phone,
+   send it with every API call, and lock this phone to the patient screen. */
+(function () {
+  try {
+    const m = location.hash.match(/k=([A-Za-z0-9_\-]+)/);
+    if (m) { localStorage.setItem('echoes_patient_key', m[1]); localStorage.setItem('echoes_role', 'patient');
+             history.replaceState(null, '', '/patient#k=' + m[1]); }
+  } catch (e) {}
+  let k = null; try { k = localStorage.getItem('echoes_patient_key'); } catch (e) {}
+  const of = window.fetch.bind(window);
+  window.fetch = (u, o) => {
+    if (k && typeof u === 'string' && u.startsWith('/api/')) {
+      o = Object.assign({}, o || {}); o.headers = Object.assign({}, o.headers || {}, { 'X-Patient-Key': k });
+    }
+    return of(u, o);
+  };
+  of('/api/companion/config', { headers: k ? { 'X-Patient-Key': k } : {} }).then(r => {
+    if (r.status !== 401) return;
+    document.addEventListener('DOMContentLoaded', () => {}, { once: true });
+    const show = () => { document.body.innerHTML =
+      '<main style="max-width:520px;margin:18vh auto;padding:24px;text-align:center;font-family:system-ui,sans-serif">' +
+      '<div style="font-size:48px">🔒</div><h1 style="font-size:22px">رابط المريض غير صالح</h1>' +
+      '<p style="color:#6b5a80">افتح رابط «جوال المريض» الذي يصل من المسؤول (في تيليجرام أو صفحة «حالة الجهاز»).</p></main>'; };
+    if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
+  }).catch(() => {});
+})();
+</script>
+
+<style>
+  .voice-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .orb {
+    width:150px; height:150px; border-radius:50%;
+    display:grid; place-items:center; font-size:52px;
+    background:var(--brand-soft); color:var(--brand);
+    transition:transform .25s ease, background .25s ease, box-shadow .25s ease;
+    cursor:pointer; user-select:none;
+  }
+  .orb.listening { background:#e5484d; color:#fff; animation:pulse 1.2s infinite; }
+  .orb.thinking  { background:#c9721c; color:#fff; }
+  .orb.speaking  { background:var(--ok); color:#fff; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.07)} }
+  .state { font-size:17px; font-weight:700; color:var(--muted); }
+  .chatlog { width:100%; }
+  .bubble { padding:12px 16px; border-radius:14px; max-width:88%; white-space:pre-wrap; margin-bottom:10px; }
+  .bubble.me { align-self:flex-start; background:#eceaf4; }
+  .bubble.bot { align-self:flex-end; background:var(--brand-soft); color:#2b2166; }
+  .bubble.unsure { align-self:flex-end; background:var(--warn-soft); color:var(--warn); border:1px dashed #e0b98c; }
+  .bubble.memory { align-self:flex-end; background:#f3ecfb; color:#3b1d5c; border-inline-start:4px solid #7628b8; }
+  .bubble.note { align-self:center; background:#f6f6f6; color:#666; font-size:13px; }
+  .pending { width:100%; padding:10px 14px; border-radius:12px; background:#fff7e6; color:#8a5300; font-weight:700; display:none; }
+  .pending.on { display:block; }
+  .mode-row { font-size:14px; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  .voice-controls { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .voice-controls button { padding:10px 18px; font-size:15px; font-weight:700;
+    border:none; border-radius:10px; cursor:pointer; background:var(--brand); color:#fff; }
+  .voice-controls button.ghost { background:var(--brand-soft); color:var(--brand); }
+  .voice-controls button.danger { background:#d33f3f; }
+  .slider-row { display:flex; align-items:center; gap:10px; font-size:14px; color:var(--muted); }
+  .slider-row input[type=range] { width:130px; }
+</style>
+<style>
+  #trackerPair { margin: 0 0 16px; }
+  .tp-card { background:#fff; border:2px solid #b88ce0; border-radius:18px; padding:16px; text-align:center; }
+  .tp-title { font-weight:800; font-size:19px; margin-bottom:6px; color:#3b1d5c; }
+  .tp-note { font-size:14px; color:#6b5a80; margin:4px 0; }
+  .tp-qr { background:#fff; display:inline-block; line-height:0; padding:8px; border-radius:12px; }
+  .tp-code { font:800 28px/1.3 monospace; letter-spacing:6px; direction:ltr; color:#3b1d5c; }
+  .tp-small { font-size:13px; padding:6px 12px; margin-top:6px; }
+  .tp-pill { display:inline-block; padding:7px 14px; border-radius:20px; font-size:14px; font-weight:700; }
+  .tp-pill.on { background:#e2f6ea; color:#12503a; } .tp-pill.off { background:#fff1dc; color:#8a5300; }
+</style>
+</head>
+<body class="patient">
+  <div class="demo-badge" id="demo-badge" hidden>وضع التشغيل الحقيقي — لا محاكاة</div>
+
+  <main class="patient-shell">
+    <div id="installBar" hidden style="margin:0 0 12px;padding:12px 14px;border-radius:14px;background:#3b1d5c;color:#fff;display:flex;gap:10px;align-items:center;justify-content:space-between">
+      <span id="installText">📲 ثبّتي تطبيق المريض على هذا الجوال</span>
+      <button id="installBtn" type="button" style="border:0;border-radius:999px;padding:8px 16px;font-weight:800;background:#fff;color:#3b1d5c">تثبيت</button>
+    </div>
+    <div id="trackerPair" hidden></div>
+    <h1>المساعد الصوتي</h1>
+    <p class="hint">اسأل بصوتك. سأسمعك وأجيبك بصوت.</p>
+
+    <div class="voice-wrap">
+      <div class="orb" id="orb" title="اضغط للبدء أو الإيقاف" aria-label="الميكروفون">●</div>
+      <div class="state" id="state">اضغط للبدء</div>
+
+      <div class="voice-controls">
+        <button id="toggle">ابدأ الاستماع</button>
+        <button class="ghost" id="replay">إعادة آخر رد</button>
+        <button class="ghost" id="mute">كتم الصوت</button>
+        <button class="ghost" id="asknow">اسأل الآن</button>
+      </div>
+
+      <label class="mode-row"><input type="checkbox" id="companionMode" checked>
+        وضع المرافق: إذا سأل أحد ولم أرد خلال <b id="delay">13</b> ثانية يجيب المساعد عني (بدون المعلومات الخاصة جدًا)</label>
+      <div id="pending" class="pending"></div>
+
+      <div class="slider-row">
+        <span>سرعة الكلام</span>
+        <input type="range" id="rate" min="0.6" max="1.4" step="0.1" value="0.9">
+        <span>الصوت</span>
+        <input type="range" id="vol" min="0" max="1" step="0.1" value="1">
+      </div>
+    </div>
+
+    <section id="log" class="chatlog" style="margin-top:20px" aria-live="polite"></section>
+
+    <p class="foot">
+      لا يُسجَّل صوتك ولا يُحفظ. يتحوّل إلى نص على جهازك ثم يُنسى.
+    </p>
+  </main>
+
+<script src="/static/companion.js"></script>
+<script src="/static/tracker_pair.js"></script>
+<script>
+const orb = document.getElementById('orb');
+const stateEl = document.getElementById('state');
+const toggleBtn = document.getElementById('toggle');
+const log = document.getElementById('log');
+const rateEl = document.getElementById('rate');
+const volEl = document.getElementById('vol');
+
+let listening = false;
+let muted = false;
+let lastReply = '';
+let recognition = null;
+let restartTimer = null;
+let speaking = false;
+
+function setState(kind, text) {
+  orb.className = 'orb' + (kind ? ' ' + kind : '');
+  stateEl.textContent = text;
+}
+
+function bubble(text, cls) {
+  const d = document.createElement('div');
+  d.className = 'bubble ' + cls;
+  d.textContent = text;
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+  return d;
+}
+
+/* ---------------- Text to speech (real audio out) ---------------- */
+function speak(text) {
+  if (!('speechSynthesis' in window)) {
+    bubble('المتصفح لا يدعم النطق الصوتي.', 'unsure');
+    return;
+  }
+  lastReply = text;
+  if (muted) { setState('', 'مكتوم — الرد مكتوب فقط'); return; }
+
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ar-SA';
+  u.rate = parseFloat(rateEl.value) || 0.9;
+  u.volume = parseFloat(volEl.value);
+  const voices = speechSynthesis.getVoices() || [];
+  const arVoice = voices.find(v => v.lang && v.lang.startsWith('ar'));
+  if (arVoice) u.voice = arVoice;
+  // If the browser has no Arabic voice, say so once rather than failing silently.
+  else if (voices.length && !window.__warnedNoArabic) {
+    window.__warnedNoArabic = true;
+    bubble('لا يوجد صوت عربي مثبَّت في هذا المتصفح — الرد سيظهر نصًّا.',
+           'unsure');
+  }
+
+  speaking = true;
+  setState('speaking', 'أتحدث…');
+  stopListening();          // never record while speaking (no self-hearing)
+
+  u.onend = () => {
+    speaking = false;
+    if (listening) { setState('listening', 'أسمعك…'); scheduleRestart(); }
+    else setState('', 'جاهز');
+  };
+  u.onerror = (ev) => {
+    speaking = false;
+    // Chrome fires "interrupted"/"canceled" when we cancel deliberately; that
+    // is not a fault and must not alarm the patient.
+    const benign = ['interrupted', 'canceled'];
+    if (!benign.includes(ev && ev.error) && !window.__warnedNoAudio) {
+      window.__warnedNoAudio = true;
+      bubble('الصوت غير متاح على هذا الجهاز — الرد مكتوب أمامك.', 'unsure');
+    }
+    setState('', 'جاهز');
+  };
+  speechSynthesis.speak(u);
+}
+
+/* ---------------- Speech to text (real microphone) ---------------- */
+function initRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  const r = new SR();
+  r.lang = 'ar-SA';
+  r.continuous = false;
+  r.interimResults = true;
+  r.maxAlternatives = 1;
+
+  r.onresult = (ev) => {
+    let interim = '', final = '';
+    for (let i = ev.resultIndex; i < ev.results.length; i++) {
+      const t = ev.results[i][0].transcript;
+      if (ev.results[i].isFinal) final += t; else interim += t;
+    }
+    if (interim) stateEl.textContent = interim.trim();
+    if (final.trim()) ask(final.trim());
+  };
+
+  r.onerror = (e) => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      setState('', 'الميكروفون ممنوع — اسمحي للمتصفح');
+      listening = false; toggleBtn.textContent = 'ابدأ الاستماع';
+    } else if (e.error === 'no-speech') {
+      if (listening) scheduleRestart();
+    } else if (e.error === 'audio-capture') {
+      setState('', 'لا يوجد ميكروفون متصل');
+      listening = false; toggleBtn.textContent = 'ابدأ الاستماع';
+    }
+  };
+
+  r.onend = () => {
+    if (listening && !speaking) scheduleRestart();
+  };
+
+  return r;
+}
+
+function scheduleRestart() {
+  clearTimeout(restartTimer);
+  restartTimer = setTimeout(() => { if (listening && !speaking) startListening(); }, 400);
+}
+
+function startListening() {
+  if (!recognition) { recognition = initRecognition(); }
+  if (!recognition) {
+    bubble('المتصفح لا يدعم التعرف على الكلام. استخدمي Chrome.', 'unsure');
+    return;
+  }
+  try {
+    recognition.start();
+    setState('listening', 'أسمعك…');
+  } catch (e) {
+    // start() throws if already started — harmless here.
+  }
+}
+
+function stopListening() {
+  clearTimeout(restartTimer);
+  if (recognition) { try { recognition.stop(); } catch (e) {} }
+}
+
+/* ---------------- ask the AI, then speak ---------------- */
+async function ask(text) {
+  bubble(text, 'me');
+  setState('thinking', 'أفكر…');
+  stopListening();
+  try {
+    const r = await fetch('/api/agent/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text }),
+    });
+    const d = await r.json();
+    bubble(d.answer, d.kind === 'refused' ? 'unsure' : 'bot');
+    speak(d.answer);
+  } catch (e) {
+    bubble('تعذّر الاتصال بالمساعد.', 'unsure');
+    setState('', 'خطأ في الاتصال');
+  }
+}
+
+/* ---------------- companion mode (13-second rule) ---------------- */
+const modeEl = document.getElementById('companionMode');
+const companionOn = () => modeEl.checked;
+Companion.onLog = (t, cls) => bubble(t, cls);
+Companion.onState = (k, t) => setState(k, t);
+Companion.onPending = (left, q) => {
+  const el = document.getElementById('pending');
+  if (left == null) { el.classList.remove('on'); return; }
+  el.classList.add('on');
+  el.textContent = `«${q}» — أنتظر ردك… سأجيب بعد ${Math.max(left, 0)} ثانية إن لم ترد.`;
+};
+rateEl.oninput = () => { Companion.rate = parseFloat(rateEl.value) || 0.9; };
+volEl.oninput = () => { Companion.volume = parseFloat(volEl.value); };
+document.getElementById('asknow').onclick = () => {
+  if (companionOn()) {
+    if (!Companion.ears.on) toggleBtn.click();
+    Companion.askNext();
+  } else if (!listening) toggleBtn.click();
+};
+modeEl.onchange = () => { if (listening) { toggleBtn.click(); toggleBtn.click(); } };
+fetch('/api/companion/config').then(r => r.json()).then(c => {
+  document.getElementById('delay').textContent = c.reply_delay || 13;
+}).catch(() => {});
+
+/* ---------------- controls ---------------- */
+toggleBtn.onclick = () => {
+  if (companionOn() || Companion.ears.on) {
+    if (Companion.ears.on) {
+      Companion.ears.stop(); listening = false;
+      toggleBtn.textContent = 'ابدأ الاستماع'; toggleBtn.className = '';
+      return;
+    }
+    if (companionOn()) {
+      stopListening(); listening = true;
+      if (Companion.ears.start()) { toggleBtn.textContent = 'أوقف الاستماع'; toggleBtn.className = 'danger'; }
+      return;
+    }
+  }
+  listening = !listening;
+  if (listening) {
+    toggleBtn.textContent = 'أوقف الاستماع';
+    toggleBtn.className = 'danger';
+    startListening();
+  } else {
+    toggleBtn.textContent = 'ابدأ الاستماع';
+    toggleBtn.className = '';
+    stopListening();
+    setState('', 'متوقف');
+  }
+};
+
+orb.onclick = () => toggleBtn.click();
+
+document.getElementById('replay').onclick = () => {
+  if (!lastReply) return;
+  if (companionOn()) Companion.speak(lastReply); else speak(lastReply);
+};
+// remember the last companion reply too
+const _cs = Companion.speak;
+Companion.speak = (t, p) => { lastReply = t; _cs(t, p); };
+
+document.getElementById('mute').onclick = (e) => {
+  muted = !muted;
+  Companion.muted = muted;
+  e.target.textContent = muted ? 'تشغيل الصوت' : 'كتم الصوت';
+  if (muted && window.speechSynthesis) window.speechSynthesis.cancel();
+};
+
+// Voices load asynchronously in most browsers.
+if ('speechSynthesis' in window) {
+  speechSynthesis.onvoiceschanged = () => {};
+}
+
+fetch('/health').then(r => r.json()).then(h => {
+  if (!h.demo_mode) document.getElementById('demo-badge').hidden = true;
+}).catch(() => {});
+</script>
+<script>
+/* «Install app»: Android shows the system prompt; iPhone gets the 2 steps. */
+(function () {
+  const bar = document.getElementById('installBar'), btn = document.getElementById('installBtn');
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (!bar || standalone) return;
+  let ev = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); ev = e; bar.hidden = false; });
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (ios) { bar.hidden = false; }
+  btn.onclick = async () => {
+    if (ev) { ev.prompt(); await ev.userChoice; ev = null; bar.hidden = true; return; }
+    document.getElementById('installText').textContent = ios
+      ? 'في Safari: زر المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية»'
+      : 'من قائمة المتصفح ⋮ ← «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية»';
+    btn.hidden = true;
+  };
+  window.addEventListener('appinstalled', () => { bar.hidden = true; });
+})();
+</script>
+</body>
+</html>

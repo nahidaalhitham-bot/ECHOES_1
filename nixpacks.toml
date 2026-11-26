@@ -1,0 +1,3 @@
+# Railway / Nixpacks: OpenCV needs these system libraries even in headless mode.
+[phases.setup]
+aptPkgs = ["libglib2.0-0", "libgl1"]
