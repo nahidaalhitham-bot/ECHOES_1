@@ -35,6 +35,11 @@ BASE = Path(__file__).resolve().parent
 
 # Real operation is the default. Demo data is opt-in only, so a fresh install
 # never shows a fake patient or invented coordinates.
+# A file named DEMO_MODE next to run.py turns on the ready-made fictional data
+# (handy on Railway/Render: no settings to type).
+if (Path(__file__).resolve().parent.parent / "DEMO_MODE").exists():
+    os.environ.setdefault("ECHEOS_DEMO", "1")
+    os.environ.setdefault("ECHEOS_ALLOW_SIMULATOR", "1")
 DEMO_MODE = os.environ.get("ECHEOS_DEMO", "0") == "1"
 
 

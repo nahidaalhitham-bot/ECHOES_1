@@ -336,8 +336,10 @@ def copy_real_settings() -> int:
 def seed_full_demo(auto_build, patient_memory_id) -> None:
     """Fill a fresh demo database. `auto_build` / `patient_memory_id` are
     passed in from main to avoid a circular import."""
-    if auth.count_users() == 0:
+    try:   # the demo account always exists in demo mode (even beside a real owner)
         auth.create_user(DEMO_EMAIL, DEMO_PASSWORD, "عرض ECHOES", "owner")
+    except Exception:
+        pass
     copy_real_settings()
 
     with connect() as conn:
